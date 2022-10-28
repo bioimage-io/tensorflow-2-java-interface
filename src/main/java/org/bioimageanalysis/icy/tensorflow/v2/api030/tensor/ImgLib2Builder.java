@@ -1,5 +1,6 @@
 package org.bioimageanalysis.icy.tensorflow.v2.api030.tensor;
 
+import org.bioimageanalysis.icy.deeplearning.utils.IndexingUtils;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TFloat64;
 import org.tensorflow.types.TInt32;
@@ -7,14 +8,10 @@ import org.tensorflow.types.TInt64;
 import org.tensorflow.types.TUint8;
 import org.tensorflow.types.family.TType;
 
+import net.imglib2.Cursor;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImg;
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.basictypeaccess.array.ByteArray;
-import net.imglib2.img.basictypeaccess.array.DoubleArray;
-import net.imglib2.img.basictypeaccess.array.FloatArray;
-import net.imglib2.img.basictypeaccess.array.IntArray;
-import net.imglib2.img.basictypeaccess.array.LongArray;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
@@ -63,58 +60,103 @@ public final class ImgLib2Builder
         }
     }
 
-    private static ArrayImg<ByteType, ByteArray> buildFromTensorByte(TUint8 tensor)
+    private static Img<ByteType> buildFromTensorByte(TUint8 tensor)
     {
-		long[] tensorShape = tensor.shape().asArray();
-		long size = 1;
-		for (long ss : tensorShape) {size *= ss;}
-		byte[] flatImageArray = new byte[(int) size];
-		// Copy data from tensor to array
-        tensor.asRawTensor().data().read(flatImageArray);
-		return ArrayImgs.bytes(flatImageArray, tensorShape);
+    	long[] tensorShape = tensor.shape().asArray();
+    	final ImgFactory< ByteType > factory = new CellImgFactory<>( new ByteType(), 5 );
+        final Img< ByteType > outputImg = (Img<ByteType>) factory.create(tensorShape);
+    	Cursor<ByteType> tensorCursor= outputImg.cursor();
+		int totalSize = 1;
+		for (long i : tensorShape) {totalSize *= i;}
+        byte[] flatArr = new byte[totalSize];
+        tensor.asRawTensor().data().read(flatArr);
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	byte val = flatArr[flatPos];
+        	tensorCursor.get().set(val);
+		}
+	 	return outputImg;
     }
 
-    private static ArrayImg<IntType, IntArray> buildFromTensorInt(TInt32 tensor)
+    private static Img<IntType> buildFromTensorInt(TInt32 tensor)
     {
-		long[] tensorShape = tensor.shape().asArray();
-		long size = 1;
-		for (long ss : tensorShape) {size *= ss;}
-		int[] flatImageArray = new int[(int) size];
-		// Copy data from tensor to array
-        tensor.asRawTensor().data().asInts().read(flatImageArray);
-		return ArrayImgs.ints(flatImageArray, tensorShape);
+    	long[] tensorShape = tensor.shape().asArray();
+    	final ImgFactory< IntType > factory = new CellImgFactory<>( new IntType(), 5 );
+        final Img< IntType > outputImg = (Img<IntType>) factory.create(tensorShape);
+    	Cursor<IntType> tensorCursor= outputImg.cursor();
+		int totalSize = 1;
+		for (long i : tensorShape) {totalSize *= i;}
+        int[] flatArr = new int[totalSize];
+        tensor.asRawTensor().data().asInts().read(flatArr);
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	int val = flatArr[flatPos];
+        	tensorCursor.get().set(val);
+		}
+	 	return outputImg;
     }
 
-    private static ArrayImg<FloatType, FloatArray> buildFromTensorFloat(TFloat32 tensor)
+    private static Img<FloatType> buildFromTensorFloat(TFloat32 tensor)
     {
-		long[] tensorShape = tensor.shape().asArray();
-		long size = 1;
-		for (long ss : tensorShape) {size *= ss;}
-		float[] flatImageArray = new float[(int) size];
-		// Copy data from tensor to array
-        tensor.asRawTensor().data().asFloats().read(flatImageArray);
-		return ArrayImgs.floats(flatImageArray, tensorShape);
+    	long[] tensorShape = tensor.shape().asArray();
+    	final ImgFactory< FloatType > factory = new CellImgFactory<>( new FloatType(), 5 );
+        final Img< FloatType > outputImg = (Img<FloatType>) factory.create(tensorShape);
+    	Cursor<FloatType> tensorCursor= outputImg.cursor();
+		int totalSize = 1;
+		for (long i : tensorShape) {totalSize *= i;}
+        float[] flatArr = new float[totalSize];
+        tensor.asRawTensor().data().asFloats().read(flatArr);
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	float val = flatArr[flatPos];
+        	tensorCursor.get().set(val);
+		}
+	 	return outputImg;
     }
 
-    private static ArrayImg<DoubleType, DoubleArray> buildFromTensorDouble(TFloat64 tensor)
+    private static Img<DoubleType> buildFromTensorDouble(TFloat64 tensor)
     {
-		long[] tensorShape = tensor.shape().asArray();
-		long size = 1;
-		for (long ss : tensorShape) {size *= ss;}
-		double[] flatImageArray = new double[(int) size];
-		// Copy data from tensor to array
-        tensor.asRawTensor().data().asDoubles().read(flatImageArray);
-		return ArrayImgs.doubles(flatImageArray, tensorShape);
+    	long[] tensorShape = tensor.shape().asArray();
+    	final ImgFactory< DoubleType > factory = new CellImgFactory<>( new DoubleType(), 5 );
+        final Img< DoubleType > outputImg = (Img<DoubleType>) factory.create(tensorShape);
+    	Cursor<DoubleType> tensorCursor= outputImg.cursor();
+		int totalSize = 1;
+		for (long i : tensorShape) {totalSize *= i;}
+        double[] flatArr = new double[totalSize];
+        tensor.asRawTensor().data().asDoubles().read(flatArr);
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	double val = flatArr[flatPos];
+        	tensorCursor.get().set(val);
+		}
+	 	return outputImg;
     }
 
-    private static ArrayImg<LongType, LongArray> buildFromTensorLong(TInt64 tensor)
+    private static Img<LongType> buildFromTensorLong(TInt64 tensor)
     {
-		long[] tensorShape = tensor.shape().asArray();
-		long size = 1;
-		for (long ss : tensorShape) {size *= ss;}
-		long[] flatImageArray = new long[(int) size];
-		// Copy data from tensor to array
-        tensor.asRawTensor().data().asLongs().read(flatImageArray);
-		return ArrayImgs.longs(flatImageArray, tensorShape);
+    	long[] tensorShape = tensor.shape().asArray();
+    	final ImgFactory< LongType > factory = new CellImgFactory<>( new LongType(), 5 );
+        final Img< LongType > outputImg = (Img<LongType>) factory.create(tensorShape);
+    	Cursor<LongType> tensorCursor= outputImg.cursor();
+		int totalSize = 1;
+		for (long i : tensorShape) {totalSize *= i;}
+        long[] flatArr = new long[totalSize];
+        tensor.asRawTensor().data().asLongs().read(flatArr);
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	long val = flatArr[flatPos];
+        	tensorCursor.get().set(val);
+		}
+	 	return outputImg;
     }
 }

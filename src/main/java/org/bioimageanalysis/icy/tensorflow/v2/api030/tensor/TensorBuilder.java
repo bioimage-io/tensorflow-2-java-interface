@@ -1,6 +1,6 @@
 package org.bioimageanalysis.icy.tensorflow.v2.api030.tensor;
 
-import org.bioimageanalysis.icy.deeplearning.tensor.RaiArrayUtils;
+import org.bioimageanalysis.icy.deeplearning.utils.IndexingUtils;
 import org.tensorflow.Tensor;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.ndarray.buffer.ByteDataBuffer;
@@ -9,7 +9,6 @@ import org.tensorflow.ndarray.buffer.FloatDataBuffer;
 import org.tensorflow.ndarray.buffer.IntDataBuffer;
 import org.tensorflow.ndarray.buffer.LongDataBuffer;
 import org.tensorflow.ndarray.impl.buffer.raw.RawDataBufferFactory;
-import org.tensorflow.types.TBool;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TFloat64;
 import org.tensorflow.types.TInt32;
@@ -17,7 +16,9 @@ import org.tensorflow.types.TInt64;
 import org.tensorflow.types.TUint8;
 import org.tensorflow.types.family.TType;
 
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
@@ -25,6 +26,7 @@ import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
+import net.imglib2.view.IntervalView;
 
 
 /**
@@ -89,11 +91,30 @@ public final class TensorBuilder
      * @throws IllegalArgumentException
      *         If the type of the image is not compatible.
      */
-    public static TUint8 buildByte(RandomAccessibleInterval<ByteType> array) throws IllegalArgumentException
+    public static TUint8 buildByte(RandomAccessibleInterval<ByteType> imgTensor) throws IllegalArgumentException
     {
-        ByteDataBuffer dataBuffer = RawDataBufferFactory.create(RaiArrayUtils.byteArray(array), false);
-        TUint8 tensor = Tensor.of(TUint8.class, Shape.of(array.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+    	long[] tensorShape = imgTensor.dimensionsAsLongArray();
+    	Cursor<ByteType> tensorCursor;
+		if (imgTensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<ByteType>) imgTensor).cursor();
+		else if (imgTensor instanceof Img)
+			tensorCursor = ((Img<ByteType>) imgTensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : imgTensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		byte[] flatArr = new byte[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	byte val = tensorCursor.get().getByte();
+        	flatArr[flatPos] = val;
+		}
+        ByteDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
+        TUint8 tensor = Tensor.of(TUint8.class, Shape.of(imgTensor.dimensionsAsLongArray()), dataBuffer);
+	 	return tensor;
     }
 
     /**
@@ -107,11 +128,30 @@ public final class TensorBuilder
      * @throws IllegalArgumentException
      *         If the type of the image is not compatible.
      */
-    public static TInt32 buildInt(RandomAccessibleInterval<IntType> array) throws IllegalArgumentException
+    public static TInt32 buildInt(RandomAccessibleInterval<IntType> imgTensor) throws IllegalArgumentException
     {
-        IntDataBuffer dataBuffer = RawDataBufferFactory.create(RaiArrayUtils.intArray(array), false);
-        TInt32 tensor = TInt32.tensorOf(Shape.of(array.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+    	long[] tensorShape = imgTensor.dimensionsAsLongArray();
+    	Cursor<IntType> tensorCursor;
+		if (imgTensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<IntType>) imgTensor).cursor();
+		else if (imgTensor instanceof Img)
+			tensorCursor = ((Img<IntType>) imgTensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : imgTensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		int[] flatArr = new int[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	int val = tensorCursor.get().getInt();
+        	flatArr[flatPos] = val;
+		}
+		IntDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
+		TInt32 tensor = TInt32.tensorOf(Shape.of(imgTensor.dimensionsAsLongArray()), dataBuffer);
+	 	return tensor;
     }
 
     /**
@@ -123,11 +163,30 @@ public final class TensorBuilder
      * @throws IllegalArgumentException
      *         If the type of the image is not compatible.
      */
-    private static TInt64 buildLong(RandomAccessibleInterval<LongType> array) throws IllegalArgumentException
+    private static TInt64 buildLong(RandomAccessibleInterval<LongType> imgTensor) throws IllegalArgumentException
     {
-        LongDataBuffer dataBuffer = RawDataBufferFactory.create(RaiArrayUtils.longArray(array), false);
-        TInt64 tensor = TInt64.tensorOf(Shape.of(array.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+    	long[] tensorShape = imgTensor.dimensionsAsLongArray();
+    	Cursor<LongType> tensorCursor;
+		if (imgTensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<LongType>) imgTensor).cursor();
+		else if (imgTensor instanceof Img)
+			tensorCursor = ((Img<LongType>) imgTensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : imgTensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		long[] flatArr = new long[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	long val = tensorCursor.get().getLong();
+        	flatArr[flatPos] = val;
+		}
+		LongDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
+		TInt64 tensor = TInt64.tensorOf(Shape.of(imgTensor.dimensionsAsLongArray()), dataBuffer);
+	 	return tensor;
     }
 
     /**
@@ -139,11 +198,30 @@ public final class TensorBuilder
      * @throws IllegalArgumentException
      *         If the type of the image is not compatible.
      */
-    public static TFloat32 buildFloat(RandomAccessibleInterval<FloatType> array) throws IllegalArgumentException
+    public static TFloat32 buildFloat(RandomAccessibleInterval<FloatType> imgTensor) throws IllegalArgumentException
     {
-        FloatDataBuffer dataBuffer = RawDataBufferFactory.create(RaiArrayUtils.floatArray(array), false);
-        TFloat32 tensor = TFloat32.tensorOf(Shape.of(array.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+    	long[] tensorShape = imgTensor.dimensionsAsLongArray();
+    	Cursor<FloatType> tensorCursor;
+		if (imgTensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<FloatType>) imgTensor).cursor();
+		else if (imgTensor instanceof Img)
+			tensorCursor = ((Img<FloatType>) imgTensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : imgTensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		float[] flatArr = new float[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	float val = tensorCursor.get().getRealFloat();
+        	flatArr[flatPos] = val;
+		}
+		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
+		TFloat32 tensor = TFloat32.tensorOf(Shape.of(imgTensor.dimensionsAsLongArray()), dataBuffer);
+	 	return tensor;
     }
 
     /**
@@ -155,10 +233,29 @@ public final class TensorBuilder
      * @throws IllegalArgumentException
      *         If the type of the image is not compatible.
      */
-    private static TFloat64 buildDouble(RandomAccessibleInterval<DoubleType> array) throws IllegalArgumentException
+    private static TFloat64 buildDouble(RandomAccessibleInterval<DoubleType> imgTensor) throws IllegalArgumentException
     {
-        DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(RaiArrayUtils.doubleArray(array), false);
-        TFloat64 tensor = TFloat64.tensorOf(Shape.of(array.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+    	long[] tensorShape = imgTensor.dimensionsAsLongArray();
+    	Cursor<DoubleType> tensorCursor;
+		if (imgTensor instanceof IntervalView)
+			tensorCursor = ((IntervalView<DoubleType>) imgTensor).cursor();
+		else if (imgTensor instanceof Img)
+			tensorCursor = ((Img<DoubleType>) imgTensor).cursor();
+		else
+			throw new IllegalArgumentException("The data of the " + Tensor.class + " has "
+					+ "to be an instance of " + Img.class + " or " + IntervalView.class);
+		long flatSize = 1;
+		for (long dd : imgTensor.dimensionsAsLongArray()) { flatSize *= dd;}
+		double[] flatArr = new double[(int) flatSize];
+		while (tensorCursor.hasNext()) {
+			tensorCursor.fwd();
+			long[] cursorPos = tensorCursor.positionAsLongArray();
+        	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
+        	double val = tensorCursor.get().getRealDouble();
+        	flatArr[flatPos] = val;
+		}
+		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
+		TFloat64 tensor = TFloat64.tensorOf(Shape.of(imgTensor.dimensionsAsLongArray()), dataBuffer);
+	 	return tensor;
     }
 }

@@ -6,9 +6,9 @@ import java.util.List;
 import org.bioimageanalysis.icy.deeplearning.tensor.Tensor;
 import org.bioimageanalysis.icy.deeplearning.tensorflow.v2.api030.tensor.ImgLib2Builder;
 import org.bioimageanalysis.icy.deeplearning.tensorflow.v2.api030.tensor.TensorBuilder;
+import org.bioimageanalysis.icy.deeplearning.engine.DeepLearningEngineInterface;
 import org.bioimageanalysis.icy.deeplearning.exceptions.LoadModelException;
 import org.bioimageanalysis.icy.deeplearning.exceptions.RunModelException;
-import org.bioimageanalysis.icy.deeplearning.utils.DeepLearningInterface;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
 import org.tensorflow.proto.framework.MetaGraphDef;
@@ -18,7 +18,7 @@ import org.tensorflow.types.family.TType;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
-public class Tensorflow2Interface implements DeepLearningInterface
+public class Tensorflow2Interface implements DeepLearningEngineInterface
 {
     private static final String[] MODEL_TAGS = {"serve", "inference", "train", "eval", "gpu", "tpu"};
 

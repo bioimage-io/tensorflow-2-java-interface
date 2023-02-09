@@ -1,12 +1,6 @@
-package org.bioimageanalysis.icy.deeplearning.tensorflow.v2.api030.tensor;
+package io.bioimage.modelrunner.tensorflow.v2.api030.tensor;
 
-import org.bioimageanalysis.icy.deeplearning.utils.IndexingUtils;
-import org.tensorflow.types.TFloat32;
-import org.tensorflow.types.TFloat64;
-import org.tensorflow.types.TInt32;
-import org.tensorflow.types.TInt64;
-import org.tensorflow.types.TUint8;
-import org.tensorflow.types.family.TType;
+import io.bioimage.modelrunner.utils.IndexingUtils;
 
 import net.imglib2.Cursor;
 import net.imglib2.img.Img;
@@ -19,6 +13,12 @@ import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 
+import org.tensorflow.types.TFloat32;
+import org.tensorflow.types.TFloat64;
+import org.tensorflow.types.TInt32;
+import org.tensorflow.types.TInt64;
+import org.tensorflow.types.TUint8;
+import org.tensorflow.types.family.TType;
 
 /**
  * @author Carlos GArcia Lopez de Haro and Daniel Felipe Gonzalez Obando
@@ -64,7 +64,7 @@ public final class ImgLib2Builder
     {
     	long[] tensorShape = tensor.shape().asArray();
     	final ImgFactory< ByteType > factory = new CellImgFactory<>( new ByteType(), 5 );
-        final Img< ByteType > outputImg = (Img<ByteType>) factory.create(tensorShape);
+        final Img< ByteType > outputImg = factory.create(tensorShape);
     	Cursor<ByteType> tensorCursor= outputImg.cursor();
 		int totalSize = 1;
 		for (long i : tensorShape) {totalSize *= i;}
@@ -84,7 +84,7 @@ public final class ImgLib2Builder
     {
     	long[] tensorShape = tensor.shape().asArray();
     	final ImgFactory< IntType > factory = new CellImgFactory<>( new IntType(), 5 );
-        final Img< IntType > outputImg = (Img<IntType>) factory.create(tensorShape);
+        final Img< IntType > outputImg = factory.create(tensorShape);
     	Cursor<IntType> tensorCursor= outputImg.cursor();
 		int totalSize = 1;
 		for (long i : tensorShape) {totalSize *= i;}
@@ -104,7 +104,7 @@ public final class ImgLib2Builder
     {
     	long[] tensorShape = tensor.shape().asArray();
     	final ImgFactory< FloatType > factory = new CellImgFactory<>( new FloatType(), 5 );
-        final Img< FloatType > outputImg = (Img<FloatType>) factory.create(tensorShape);
+        final Img< FloatType > outputImg = factory.create(tensorShape);
     	Cursor<FloatType> tensorCursor= outputImg.cursor();
 		int totalSize = 1;
 		for (long i : tensorShape) {totalSize *= i;}
@@ -124,7 +124,7 @@ public final class ImgLib2Builder
     {
     	long[] tensorShape = tensor.shape().asArray();
     	final ImgFactory< DoubleType > factory = new CellImgFactory<>( new DoubleType(), 5 );
-        final Img< DoubleType > outputImg = (Img<DoubleType>) factory.create(tensorShape);
+        final Img< DoubleType > outputImg = factory.create(tensorShape);
     	Cursor<DoubleType> tensorCursor= outputImg.cursor();
 		int totalSize = 1;
 		for (long i : tensorShape) {totalSize *= i;}
@@ -144,7 +144,7 @@ public final class ImgLib2Builder
     {
     	long[] tensorShape = tensor.shape().asArray();
     	final ImgFactory< LongType > factory = new CellImgFactory<>( new LongType(), 5 );
-        final Img< LongType > outputImg = (Img<LongType>) factory.create(tensorShape);
+        final Img< LongType > outputImg = factory.create(tensorShape);
     	Cursor<LongType> tensorCursor= outputImg.cursor();
 		int totalSize = 1;
 		for (long i : tensorShape) {totalSize *= i;}

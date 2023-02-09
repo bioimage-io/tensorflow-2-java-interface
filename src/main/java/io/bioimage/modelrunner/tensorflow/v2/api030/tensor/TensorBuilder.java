@@ -1,20 +1,6 @@
-package org.bioimageanalysis.icy.deeplearning.tensorflow.v2.api030.tensor;
+package io.bioimage.modelrunner.tensorflow.v2.api030.tensor;
 
-import org.bioimageanalysis.icy.deeplearning.utils.IndexingUtils;
-import org.tensorflow.Tensor;
-import org.tensorflow.ndarray.Shape;
-import org.tensorflow.ndarray.buffer.ByteDataBuffer;
-import org.tensorflow.ndarray.buffer.DoubleDataBuffer;
-import org.tensorflow.ndarray.buffer.FloatDataBuffer;
-import org.tensorflow.ndarray.buffer.IntDataBuffer;
-import org.tensorflow.ndarray.buffer.LongDataBuffer;
-import org.tensorflow.ndarray.impl.buffer.raw.RawDataBufferFactory;
-import org.tensorflow.types.TFloat32;
-import org.tensorflow.types.TFloat64;
-import org.tensorflow.types.TInt32;
-import org.tensorflow.types.TInt64;
-import org.tensorflow.types.TUint8;
-import org.tensorflow.types.family.TType;
+import io.bioimage.modelrunner.utils.IndexingUtils;
 
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
@@ -27,6 +13,22 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
+
+import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.Shape;
+import org.tensorflow.ndarray.buffer.ByteDataBuffer;
+import org.tensorflow.ndarray.buffer.DoubleDataBuffer;
+import org.tensorflow.ndarray.buffer.FloatDataBuffer;
+import org.tensorflow.ndarray.buffer.IntDataBuffer;
+import org.tensorflow.ndarray.buffer.LongDataBuffer;
+import org.tensorflow.ndarray.impl.buffer.raw.RawDataBufferFactory;
+import org.tensorflow.proto.framework.DataType;
+import org.tensorflow.types.TFloat32;
+import org.tensorflow.types.TFloat64;
+import org.tensorflow.types.TInt32;
+import org.tensorflow.types.TInt64;
+import org.tensorflow.types.TUint8;
+import org.tensorflow.types.family.TType;
 
 
 /**
@@ -50,7 +52,8 @@ public final class TensorBuilder
      * @throws IllegalArgumentException
      *         If the type of the sequence is not supported.
      */
-    public static TType build(org.bioimageanalysis.icy.deeplearning.tensor.Tensor tensor) throws IllegalArgumentException
+		public static TType build(io.bioimage.modelrunner.tensor.Tensor tensor)
+			throws IllegalArgumentException
     {
     	return build(tensor.getData());
     }

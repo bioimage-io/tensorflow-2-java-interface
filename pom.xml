@@ -17,7 +17,7 @@
 	<description>This project complements the DL-model runner acting as the engine that works loading models 
 	and making inference with Java 0.3.0 API for Tensorflow 2.
 	</description>
-	<url>https://gitlab.pasteur.fr/bia/tensorflow-2-interface-0.3.0</url>
+	<url>https://github.com/bioimage-io/tensorflow-2-java-interface</url>
 	<inceptionYear>2022</inceptionYear>
 	<organization>
 		<name>BioImage.io</name>
@@ -103,14 +103,14 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:https://gitlab.pasteur.fr/bia/tensorflow-2-interface-0.3.0</connection>
-		<developerConnection>scm:git:git@gitlab.pasteur.fr:bia/tensorflow-2-interface-0.3.0</developerConnection>
+		<connection>scm:git:https://github.com/bioimage-io/tensorflow-2-java-interface</connection>
+		<developerConnection>scm:git:git@github.com:bioimage-io/tensorflow-2-java-interface</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://gitlab.pasteur.fr/bia/tensorflow-2-interface-0.3.0</url>
+		<url>https://github.com/bioimage-io/tensorflow-2-java-interface</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://gitlab.pasteur.fr/bia/tensorflow-2-interface-0.3.0/-/issues</url>
+		<url>https://github.com/bioimage-io/tensorflow-2-java-interface/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>None</system>

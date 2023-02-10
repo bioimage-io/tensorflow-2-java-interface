@@ -1,22 +1,25 @@
-# tensorflow-2-java-interface
+[![Build Status](https://github.com/bioimage-io/tensorflow-2-java-interface/actions/workflows/build.yml/badge.svg)](https://github.com/bioimage-io/tensorflow-2-java-interface/actions/workflows/build.yml)
 
-JAR file at: https://icy-nexus.pasteur.fr/repository/Icy/org/bioimageanalysis/icy/tensor-flow-2-interface-0.3.0/0.0.1/tensor-flow-2-interface-0.3.0-0.0.1.jar
+# dl-modelrunner-java: tensorflow-2b
+
+[JAR file](https://maven.scijava.org/service/local/artifact/maven/redirect?r=releases&g=io.bioimage&a=dl-modelrunner-tensorflow-2b&v=0.1.0&e=jar)
+
 
 To use with maven:
 
 ```
 <dependency>
-  <groupId>org.bioimageanalysis.icy</groupId>
-  <artifactId>tensor-flow-2-interface-0.3.0</artifactId>
-  <version>0.0.1</version>
+  <groupId>io.bioimage</groupId>
+  <artifactId>dl-modelrunner-tensorflow-2b</artifactId>
+  <version>0.1.0</version>
 </dependency>
 ```
 
-and add to </repositories> the following:
+and add to `</repositories>` the following:
 
 ```
 <repository>
-  <id>icy</id>
-  <url>https://icy-nexus.pasteur.fr/repository/Icy/</url>
+  <id>scijava.public</id>
+  <url>https://maven.scijava.org/content/groups/public</url>
 </repository>
 ```

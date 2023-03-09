@@ -85,7 +85,7 @@ public final class ImgLib2Builder
     {
     	if (tensor instanceof TUint8)
         {
-            return (Img<T>) buildFromTensorByte((TUint8) tensor);
+            return (Img<T>) buildFromTensorUByte((TUint8) tensor);
         }
         else if (tensor instanceof TInt32)
         {
@@ -114,14 +114,14 @@ public final class ImgLib2Builder
 	 * 
 	 * @param tensor 
 	 * 	The {@link TUint8} tensor data is read from.
-	 * @return The {@link Img} built from the tensor, of type {@link ByteType}.
+	 * @return The {@link Img} built from the tensor, of type {@link UnsignedByteType}.
 	 */
-    private static Img<ByteType> buildFromTensorByte(TUint8 tensor)
+    private static Img<UnsignedByteType> buildFromTensorUByte(TUint8 tensor)
     {
     	long[] tensorShape = tensor.shape().asArray();
-    	final ImgFactory< ByteType > factory = new CellImgFactory<>( new ByteType(), 5 );
-        final Img< ByteType > outputImg = factory.create(tensorShape);
-    	Cursor<ByteType> tensorCursor= outputImg.cursor();
+    	final ImgFactory< UnsignedByteType > factory = new CellImgFactory<>( new UnsignedByteType(), 5 );
+        final Img< UnsignedByteType > outputImg = factory.create(tensorShape);
+    	Cursor<UnsignedByteType> tensorCursor= outputImg.cursor();
 		int totalSize = 1;
 		for (long i : tensorShape) {totalSize *= i;}
         byte[] flatArr = new byte[totalSize];

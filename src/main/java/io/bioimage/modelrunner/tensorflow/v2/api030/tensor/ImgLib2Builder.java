@@ -131,7 +131,10 @@ public final class ImgLib2Builder
 			long[] cursorPos = tensorCursor.positionAsLongArray();
         	int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos, tensorShape);
         	byte val = flatArr[flatPos];
-        	tensorCursor.get().set(val);
+			if (val < 0)
+				tensorCursor.get().set(256 + (int) val);
+			else
+				tensorCursor.get().set(val);
 		}
 	 	return outputImg;
     }

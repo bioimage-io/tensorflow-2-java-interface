@@ -233,9 +233,10 @@ public final class ImgLib2ToMappedBuffer
     public static < T extends RealType< T > & NativeType< T > > byte[] 
     		createFileHeader(io.bioimage.modelrunner.tensor.Tensor<T> tensor) {
     	String dimsStr = 
-    			tensor.getData() != null ? Arrays.toString(tensor.getData().dimensionsAsLongArray()) : "[]";
+    			!tensor.isEmpty() ? Arrays.toString(tensor.getData().dimensionsAsLongArray()) : "[]";
+    	T dtype = !tensor.isEmpty() ? Util.getTypeFromInterval(tensor.getData()): (T) new FloatType();
     	String descriptionStr = "{'dtype':'" 
-    			+ getDataTypeString(Util.getTypeFromInterval(tensor.getData())) + "','axes':'" 
+    			+ getDataTypeString(dtype) + "','axes':'" 
     			+ tensor.getAxesOrderString() + "','name':'" + tensor.getName() +  "','shape':'" 
     			+ dimsStr + "'}";
     	

@@ -76,10 +76,11 @@ import org.tensorflow.types.family.TType;
 /**
  * Class to that communicates with the dl-model runner, see 
  * @see <a href="https://github.com/bioimage-io/model-runner-java">dlmodelrunner</a>
- * to execute Tensorflow 1 models.
+ * to execute Tensorflow 2 models. This class is compatible with every TF2 Java API
+ * but the 0.2.0 version
  * This class implements the interface {@link DeepLearningEngineInterface} to get the 
  * agnostic {@link io.bioimage.modelrunner.tensor.Tensor}, convert them into 
- * {@link org.tensorflow.Tensor}, execute a Tensorflow 1 Deep Learning model on them and
+ * {@link org.tensorflow.Tensor}, execute a Tensorflow 2 Deep Learning model on them and
  * convert the results back to {@link io.bioimage.modelrunner.tensor.Tensor} to send them 
  * to the main program in an agnostic manner.
  * 
@@ -147,7 +148,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     final private static String FILE_EXTENSION = ".dat";
 
     /**
-     * The loaded Tensorflow 1 model
+     * The loaded Tensorflow 2 model
      */
 	private static SavedModelBundle model;
 	/**
@@ -176,16 +177,17 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     private HashMap<String, String> tensorFilenameMap;
     
     /**
+     * TODO the interprocessing is executed for every OS
      * Constructor that detects whether the operating system where it is being 
-     * executed is MacOS Intel or not to know if it is going to need interprocessing 
+     * executed is Windows or Mac or not to know if it is going to need interprocessing 
      * or not
      * @throws IOException if the temporary dir is not found
      */
     public Tensorflow2Interface() throws IOException
     {
-    	boolean isMac = PlatformDetection.isWindows();
+    	boolean isWin = PlatformDetection.isWindows();
     	boolean isIntel = new PlatformDetection().getArch().equals(PlatformDetection.ARCH_X86_64);
-    	if (isMac && isIntel) {
+    	if (true || (isWin && isIntel)) {
     		interprocessing = true;
     		tmpDir = getTemporaryDir();
     		
@@ -194,8 +196,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	
     /**
      * Private constructor that can only be launched from the class to create a separate
-     * process to avoid the conflicts that occur in the same process between TF1 and TF2
-     * in MacOS Intel
+     * process to avoid the conflicts that occur in the same process between TF2 and TF1/Pytorch
+     * in Windows and Mac
      * @param doInterprocessing
      * 	whether to do interprocessing or not
      * @throws IOException if the temp dir is not found
@@ -218,8 +220,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     /**
      * {@inheritDoc}
      * 
-     * Load a Tensorflow 1 model. If the machine where the code is
-     * being executed is a MacOS Intel, the model will be loaded in 
+     * Load a Tensorflow 2 model. If the machine where the code is
+     * being executed is a MacOS Intel or Windows, the model will be loaded in 
      * a separate process each time the method {@link #run(List, List)}
      * is called 
      */
@@ -245,7 +247,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * Run a Tensorflow1 model on the data provided by the {@link Tensor} input list
+	 * Run a Tensorflow2 model on the data provided by the {@link Tensor} input list
 	 * and modifies the output list with the results obtained
 	 */
 	@Override
@@ -285,7 +287,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	}
 	
 	/**
-	 * MEthod only used in MacOS Intel systems that makes all the arangements
+	 * MEthod only used in MacOS Intel and Windows systems that makes all the arrangements
 	 * to create another process, communicate the model info and tensors to the other 
 	 * process and then retrieve the results of the other process
 	 * @param inputTensors
@@ -322,9 +324,9 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 
 	/**
 	 * Create the list a list of output tensors agnostic to the Deep Learning
-	 * engine that can be readable by Deep Icy
+	 * engine that can be readable by the dl-modelrunner
 	 * 
-	 * @param outputNDArrays an NDList containing NDArrays (tensors)
+	 * @param outputTfTensors an List containing dl-modelrunner tensors
 	 * @param outputTensors the names given to the tensors by the model
 	 * @throws RunModelException If the number of tensors expected is not the same
 	 *           as the number of Tensors outputed by the model
@@ -344,8 +346,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * Close the Tensorflow 1 {@link #model} and {@link #sig}. For 
-	 * MacOS Intel systems it aso deletes the temporary files created to
+	 * Close the Tensorflow 2 {@link #model} and {@link #sig}. For 
+	 * MacOS Intel and Windows systems it also deletes the temporary files created to
 	 * communicate with the other process
 	 */
 	@Override
@@ -418,7 +420,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	
 	/**
 	 * Methods to run interprocessing and bypass the errors that occur in MacOS intel
-	 * with the compatibility between TF1 and TF2
+	 * with the compatibility between TF2 and TF1/Pytorch
 	 * This method checks that the arguments are correct, retrieves the input and output
 	 * tensors, loads the model, makes inference with it and finally sends the tensors
 	 * to the original process
@@ -492,7 +494,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     }
     
     /**
-     * Get the name of teh temporary file associated to the tensor name
+     * Get the name of the temporary file associated to the tensor name
      * @param name
      * 	name of the tensor
      * @return file name associated to the tensor
@@ -511,7 +513,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	
     /**
      * Create a temporary file for each of the tensors in the list to communicate with 
-     * the separate process in MacOS Intel systems
+     * the separate process in MacOS Intel and Windows systems
      * @param tensors
      * 	list of tensors to be sent
      * @throws RunModelException if there is any error converting the tensors
@@ -627,7 +629,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	}
 	
 	/**
-	 * Get temporary directory to perform the interprocessing communication in MacOSX intel
+	 * Get temporary directory to perform the interprocessing communication in MacOSX
+	 * intel and Windows
 	 * @return the tmp dir
 	 * @throws IOException
 	 */
@@ -662,7 +665,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	}
 	
 	/**
-	 * GEt the directory where the TF1 engine is located if a temporary dir is not found
+	 * GEt the directory where the TF2 engine is located if a temporary dir is not found
 	 * @return directory of the engines
 	 */
 	private static String getEnginesDir() {

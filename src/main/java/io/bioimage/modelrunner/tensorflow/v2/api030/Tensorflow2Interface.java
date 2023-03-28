@@ -190,7 +190,10 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     	if (true || (isWin && isIntel)) {
     		interprocessing = true;
     		tmpDir = getTemporaryDir();
-    		
+    		try {
+    			tmpDir = new File(tmpDir).getCanonicalPath();
+    		} catch (IOException e) {
+    		}
     	}
     }
 	
@@ -212,6 +215,10 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
         	if (isMac && isIntel) {
         		interprocessing = true;
         		tmpDir = getTemporaryDir();
+        		try {
+        			tmpDir = new File(tmpDir).getCanonicalPath();
+        		} catch (IOException e) {
+        		}
         		
         	}
     	}
@@ -229,11 +236,14 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	public void loadModel(String modelFolder, String modelSource)
 		throws LoadModelException
 	{
-		if (interprocessing) {
-			this.modelFolder = modelFolder;
-			return;
+		try {
+			this.modelFolder = new File(modelFolder).getCanonicalPath();
+		} catch (IOException e) {
 		}
-		model = SavedModelBundle.load(modelFolder, "serve");
+		if (interprocessing) 
+			return;
+		
+		model = SavedModelBundle.load(this.modelFolder, "serve");
 		byte[] byteGraph = model.metaGraphDef().toByteArray();
 		try {
 			sig = MetaGraphDef.parseFrom(byteGraph).getSignatureDefOrThrow(
@@ -302,6 +312,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		List<String> args = getProcessCommandsWithoutArgs();
 		args.add(modelFolder);
 		args.add(this.tmpDir);
+		for (String aa: args)
+			System.out.println(aa);
 		for (Tensor tensor : inputTensors) {args.add(getFilename4Tensor(tensor.getName()) + INPUT_FILE_TERMINATION);}
 		for (Tensor tensor : outputTensors) {args.add(getFilename4Tensor(tensor.getName()) + OUTPUT_FILE_TERMINATION);}
 		ProcessBuilder builder = new ProcessBuilder(args);
@@ -598,16 +610,19 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	private List<String> getProcessCommandsWithoutArgs() {
 		String javaHome = System.getProperty("java.home");
         String javaBin = javaHome +  File.separator + "bin" + File.separator + "java";
+        try {
+			javaBin = new File(javaBin).getCanonicalPath();
+		} catch (IOException e) {
+		}
         String classpath = System.getProperty("java.class.path");
         while (classpath.contains(";;"))
         	classpath = classpath.replace(";;", ";");
         String[] allClasspath = classpath.split(";");
         classpath = "";
-        Pattern imglib2Pattern = Pattern.compile(".*imglib2-.*\\.jar$");
-        Pattern modelrunnerPattern = Pattern.compile(".*dl-modelrunner-.*\\.jar$");
-        
+        Pattern imglib2Pattern = Pattern.compile(".*[/\\\\]imglib2-.*\\.jar$");
+        Pattern modelrunnerPattern = Pattern.compile(".*[/\\\\]dl-modelrunner-.*\\.jar$");
         for (String clsStr : allClasspath) {
-        	if (clsStr.contains("model-runner"))
+        	if (!clsStr.endsWith(".jar"))
         		classpath += clsStr + File.pathSeparator;
         	if ( modelrunnerPattern.matcher(clsStr).find() 
         			|| imglib2Pattern.matcher(clsStr).find() )

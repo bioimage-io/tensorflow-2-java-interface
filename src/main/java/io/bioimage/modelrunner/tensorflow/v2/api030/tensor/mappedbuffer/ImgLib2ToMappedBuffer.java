@@ -56,7 +56,7 @@ import net.imglib2.view.IntervalView;
 /**
  * Class that maps {@link Tensor} objects to {@link ByteBuffer} objects.
  * This is done to modify the files that are used to communicate between process
- * in MacOS Intel to avoid the TF1-TF2 incompatibiity that happens in these systems
+ * to avoid the TF2-TF1/Pytorch incompatibility that happens in these systems
  * 
  * @author Carlos Garcia Lopez de Haro
  */

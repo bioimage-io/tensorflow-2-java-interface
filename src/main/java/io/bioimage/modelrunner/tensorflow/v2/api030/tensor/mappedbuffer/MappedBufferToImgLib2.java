@@ -54,6 +54,10 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 
 /**
+ * Class that maps {@link ByteBuffer} objects to {@link Img} objects.
+ * This is done to modify the files that are used to communicate between process
+ * to avoid the TF2-TF1/Pytorch incompatibility that happens in these systems
+ * 
  * A {@link Img} builder from {@link ByteBuffer} objects
  * 
  * @author Carlos Garcia Lopez de Haro

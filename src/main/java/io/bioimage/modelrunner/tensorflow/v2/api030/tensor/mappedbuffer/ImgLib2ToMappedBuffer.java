@@ -1,7 +1,7 @@
 /*-
  * #%L
  * This project complements the DL-model runner acting as the engine that works loading models 
- * 	and making inference with Java API for Tensorflow 1.
+ * 	and making inference with Java 0.3.0 and newer APIs for Tensorflow 2.
  * %%
  * Copyright (C) 2022 - 2023 Institut Pasteur and BioImage.IO developers.
  * %%

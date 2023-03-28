@@ -1,7 +1,8 @@
 /*-
  * #%L
  * This project complements the DL-model runner acting as the engine that works loading models 
- * 	and making inference with Java API for Tensorflow 1.
+ * 	and making inference with Java API for Tensorflow 2. It works with all the TF2 Java
+ *  APis but the 0.2.0
  * %%
  * Copyright (C) 2022 - 2023 Institut Pasteur and BioImage.IO developers.
  * %%
@@ -309,7 +310,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		try {
 			process = builder.inheritIO().start();
 	        if (process.waitFor() != 0)
-	        	throw new RunModelException("Error executing the Tensorflow 1 model in"
+	        	throw new RunModelException("Error executing the Tensorflow 2 model in"
 	        			+ " a separate process. The process was not terminated correctly.");
 		} catch (RunModelException e) {
 			closeModel();
@@ -444,7 +445,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
     	// Unpack the args needed
     	if (args.length < 4)
-    		throw new IllegalArgumentException("Error exectuting Tensorflow 1, "
+    		throw new IllegalArgumentException("Error exectuting Tensorflow 2, "
     				+ "at least 5 arguments are required:" + System.lineSeparator()
     				+ " - Folder where the model is located" + System.lineSeparator()
     				+ " - Temporary dir where the memory mapped files are located" + System.lineSeparator()
@@ -460,7 +461,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     	String modelFolder = args[0];
     	if (!(new File(modelFolder).isDirectory())) {
     		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelFolder + "' "
-    				+ "should be an existing directory containing a Tensorflow 1 model.");
+    				+ "should be an existing directory containing a Tensorflow 2 model.");
     	}
     	
     	Tensorflow2Interface tfInterface = new Tensorflow2Interface(false);

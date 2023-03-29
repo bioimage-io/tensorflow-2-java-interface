@@ -596,7 +596,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 * process with the corresponding tensors
 	 * @return the command used to call the separate process
 	 * @throws IOException if the command needed to execute interprocessing is too long
-	 * @throws URISyntaxException if there is any error with the URIs retreived from the classes
+	 * @throws URISyntaxException if there is any error with the URIs retrieved from the classes
 	 */
 	private List<String> getProcessCommandsWithoutArgs() throws IOException, URISyntaxException {
 		String javaHome = System.getProperty("java.home");

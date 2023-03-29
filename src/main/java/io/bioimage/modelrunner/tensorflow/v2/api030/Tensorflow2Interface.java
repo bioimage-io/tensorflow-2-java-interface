@@ -308,21 +308,10 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 			for (Tensor tensor : outputTensors) {args.add(getFilename4Tensor(tensor.getName()) + OUTPUT_FILE_TERMINATION);}
 			ProcessBuilder builder = new ProcessBuilder(args);
 	        Process process = builder.start();
-	        if (process.waitFor() != 0) {
-	        	BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	    		BufferedReader bufferedErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-	    		String text = "";
-	    		String line;
-	    	    while ((line = bufferedErrReader.readLine()) != null) {
-	    	    	text += line + System.lineSeparator();
-	    	    }
-	    	    while ((line = bufferedReader.readLine()) != null) {
-	    	    	text += line + System.lineSeparator();
-	    	    }
+	        if (process.waitFor() != 0)
 	    		throw new RunModelException("Error executing the Tensorflow 2 model in"
 	        			+ " a separate process. The process was not terminated correctly."
-	        			+ System.lineSeparator() + text);
-	        }
+	        			+ System.lineSeparator() + readProcessStringOutput(process));
 		} catch (RunModelException e) {
 			closeModel();
 			throw e;
@@ -744,5 +733,26 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     	map.put(INPUTS_MAP_KEY, inputNames);
     	map.put(OUTPUTS_MAP_KEY, outputNames);
     	return map;
+    }
+    
+    /**
+     * MEthod to obtain the String output of the process in case something goes wrong
+     * @param process
+     * 	the process that executed the TF2 model
+     * @return the String output that we would have seen on the terminal
+     * @throws IOException if the output of the terminal cannot be seen
+     */
+    private static String readProcessStringOutput(Process process) throws IOException {
+    	BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader bufferedErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		String text = "";
+		String line;
+	    while ((line = bufferedErrReader.readLine()) != null) {
+	    	text += line + System.lineSeparator();
+	    }
+	    while ((line = bufferedReader.readLine()) != null) {
+	    	text += line + System.lineSeparator();
+	    }
+	    return text;
     }
 }

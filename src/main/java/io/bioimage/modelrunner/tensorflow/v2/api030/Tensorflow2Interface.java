@@ -592,7 +592,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	}
 	
 	/**
-	 * Create the arguments needed to execute tensorflow1 in another 
+	 * Create the arguments needed to execute tensorflow 2 in another 
 	 * process with the corresponding tensors
 	 * @return the command used to call the separate process
 	 * @throws IOException if the command needed to execute interprocessing is too long

@@ -435,7 +435,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
      * @throws RunModelException	if there is any error running the model
      */
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
-    	// Unpack the args needed
+    	// Unpack the args needed   	
     	if (args.length < 4)
     		throw new IllegalArgumentException("Error exectuting Tensorflow 2, "
     				+ "at least 5 arguments are required:" + System.lineSeparator()
@@ -630,8 +630,10 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	    if (urlString.startsWith("jar:")) {
 	        urlString = urlString.substring(4);
 	    }
-	    if (urlString.startsWith("file:/")) {
+	    if (urlString.startsWith("file:/") && PlatformDetection.isWindows()) {
 	        urlString = urlString.substring(6);
+	    } else if (urlString.startsWith("file:/") && !PlatformDetection.isWindows()) {
+	        urlString = urlString.substring(5);
 	    }
 	    urlString = URLDecoder.decode(urlString, "UTF-8");
 	    File file = new File(urlString);

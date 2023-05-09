@@ -651,7 +651,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 * Get temporary directory to perform the interprocessing communication in MacOSX
 	 * intel and Windows
 	 * @return the tmp dir
-	 * @throws IOException
+	 * @throws IOException if the files cannot be written in any of the temp dirs
 	 */
 	private static String getTemporaryDir() throws IOException {
 		String tmpDir;

@@ -495,8 +495,9 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     private String getFilename4Tensor(String name) {
     	if (tensorFilenameMap == null)
     		tensorFilenameMap = new HashMap<String, String>();
-    	if (tensorFilenameMap.get(name) != null)
+    	if (tensorFilenameMap.get(name) != null) {
     		return tensorFilenameMap.get(name);
+    	}
     	LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
     	String newName = name + "_" +  now.format(formatter);
@@ -596,6 +597,9 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 
         String modelrunnerPath = getPathFromClass(DeepLearningEngineInterface.class);
         String imglib2Path = getPathFromClass(NativeType.class);
+        if (modelrunnerPath.endsWith("DeepLearningEngineInterface.class") 
+        		&& !modelrunnerPath.contains(File.pathSeparator))
+        	modelrunnerPath = System.getProperty("java.class.path");
         String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
         ProtectionDomain protectionDomain = Tensorflow2Interface.class.getProtectionDomain();
         CodeSource codeSource = protectionDomain.getCodeSource();
@@ -651,7 +655,13 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 */
 	private static String getTemporaryDir() throws IOException {
 		String tmpDir;
-		if (System.getenv("temp") != null
+
+		String enginesDir = getEnginesDir();
+		if (enginesDir != null && Files.isWritable(Paths.get(enginesDir))) {
+			tmpDir = enginesDir + File.separator + "temp";
+			if (!(new File(tmpDir).isDirectory()) &&  !(new File(tmpDir).mkdirs()))
+				tmpDir = enginesDir;
+		} else if (System.getenv("temp") != null
 			&& Files.isWritable(Paths.get(System.getenv("temp")))) {
 			return System.getenv("temp");
 		} else if (System.getenv("TEMP") != null
@@ -666,12 +676,6 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		} else if (System.getProperty("java.io.tmpdir") != null 
 				&& Files.isWritable(Paths.get(System.getProperty("java.io.tmpdir")))) {
 			return System.getProperty("java.io.tmpdir");
-		}
-		String enginesDir = getEnginesDir();
-		if (Files.isWritable(Paths.get(enginesDir))) {
-			tmpDir = enginesDir + File.separator + "temp";
-			if (!(new File(tmpDir).isDirectory()) &&  !(new File(tmpDir).mkdirs()))
-				tmpDir = enginesDir;
 		} else {
 			throw new IOException("Unable to find temporal directory with writting rights. "
 					+ "Please either allow writting on the system temporal folder or on '" + enginesDir + "'.");
@@ -684,10 +688,31 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 * @return directory of the engines
 	 */
 	private static String getEnginesDir() {
-		ProtectionDomain protectionDomain = Tensorflow2Interface.class.getProtectionDomain();
-        CodeSource codeSource = protectionDomain.getCodeSource();
-        String jarFile = codeSource.getLocation().getPath();
-        return jarFile;
+		String dir;
+		try {
+			dir = getPathFromClass(Tensorflow2Interface.class);
+		} catch (UnsupportedEncodingException e) {
+			String classResource = Tensorflow2Interface.class.getName().replace('.', '/') + ".class";
+		    URL resourceUrl = Tensorflow2Interface.class.getClassLoader().getResource(classResource);
+		    if (resourceUrl == null) {
+		        return null;
+		    }
+		    String urlString = resourceUrl.toString();
+		    if (urlString.startsWith("jar:")) {
+		        urlString = urlString.substring(4);
+		    }
+		    if (urlString.startsWith("file:/") && PlatformDetection.isWindows()) {
+		        urlString = urlString.substring(6);
+		    } else if (urlString.startsWith("file:/") && !PlatformDetection.isWindows()) {
+		        urlString = urlString.substring(5);
+		    }
+		    File file = new File(urlString);
+		    String path = file.getAbsolutePath();
+		    if (path.lastIndexOf(".jar!") != -1)
+		    	path = path.substring(0, path.lastIndexOf(".jar!")) + ".jar";
+		    dir = path;
+		}
+		return new File(dir).getParent();
 	}
     
     /**

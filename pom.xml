@@ -11,7 +11,7 @@
 
 	<groupId>io.bioimage</groupId>
 	<artifactId>dl-modelrunner-tensorflow-2b</artifactId>
-	<version>0.2.1-SNAPSHOT</version>
+	<version>0.2.1-20230410.214711-14</version>
 
 	<name>TensorFlow 2 Java API 0.3.0 engine for DL-model-runner</name>
 	<description>This project complements the DL-model runner acting as the engine that works loading models 
@@ -119,7 +119,7 @@
 	<properties>
 		<package-name>io.bioimage.modelrunner.tensorflow.v2.api030</package-name>
 
-		<license.licenseName>apache_2</license.licenseName>
+		<license.licenseName>apache_v2</license.licenseName>
 		<license.copyrightOwners>Institut Pasteur and BioImage.IO developers.</license.copyrightOwners>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->

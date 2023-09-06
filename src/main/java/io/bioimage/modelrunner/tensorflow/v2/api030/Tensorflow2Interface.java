@@ -438,7 +438,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
      * @throws RunModelException	if there is any error running the model
      */
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
-    	// Unpack the args needed   	
+    	// Unpack the args needed
     	if (args.length < 4)
     		throw new IllegalArgumentException("Error exectuting Tensorflow 2, "
     				+ "at least 5 arguments are required:" + System.lineSeparator()
@@ -597,6 +597,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	private List<String> getProcessCommandsWithoutArgs() throws IOException, URISyntaxException {
 		String javaHome = System.getProperty("java.home");
         String javaBin = javaHome +  File.separator + "bin" + File.separator + "java";
+		if (javaBin.contains(" "))
+			javaBin = "\"" + javaBin + "\"";
 
         String modelrunnerPath = getPathFromClass(DeepLearningEngineInterface.class);
         String imglib2Path = getPathFromClass(NativeType.class);

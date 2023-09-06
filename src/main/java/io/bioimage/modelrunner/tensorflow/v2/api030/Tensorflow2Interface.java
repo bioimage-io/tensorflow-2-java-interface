@@ -597,8 +597,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	private List<String> getProcessCommandsWithoutArgs() throws IOException, URISyntaxException {
 		String javaHome = System.getProperty("java.home");
         String javaBin = javaHome +  File.separator + "bin" + File.separator + "java";
-		if (javaBin.contains(" "))
-			javaBin = "\"" + javaBin + "\"";
+		javaBin = "\"" + javaBin + "\"";
 
         String modelrunnerPath = getPathFromClass(DeepLearningEngineInterface.class);
         String imglib2Path = getPathFromClass(NativeType.class);

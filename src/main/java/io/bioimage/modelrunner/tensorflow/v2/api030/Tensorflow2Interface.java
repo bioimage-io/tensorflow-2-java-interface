@@ -46,6 +46,7 @@ import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -588,6 +589,22 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	}
 	
 	/**
+	 * if java bin dir contains any special char, surround it by double quotes
+	 * @param javaBin
+	 * 	java bin dir
+	 * @return impored java bin dir if needed
+	 */
+	private static String padSpecialJavaBin(String javaBin) {
+		String[] specialChars = new String[] {" "};
+        for (String schar : specialChars) {
+        	if (javaBin.contains(schar)) {
+        		return "\"" + javaBin + "\"";
+        	}
+        }
+        return javaBin;
+	}
+	
+	/**
 	 * Create the arguments needed to execute tensorflow 2 in another 
 	 * process with the corresponding tensors
 	 * @return the command used to call the separate process
@@ -597,22 +614,22 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	private List<String> getProcessCommandsWithoutArgs() throws IOException, URISyntaxException {
 		String javaHome = System.getProperty("java.home");
         String javaBin = javaHome +  File.separator + "bin" + File.separator + "java";
-		javaBin = "\"" + javaBin + "\"";
 
         String modelrunnerPath = getPathFromClass(DeepLearningEngineInterface.class);
         String imglib2Path = getPathFromClass(NativeType.class);
-        if (modelrunnerPath.endsWith("DeepLearningEngineInterface.class") 
-        		&& !modelrunnerPath.contains(File.pathSeparator))
+        if (modelrunnerPath == null || (modelrunnerPath.endsWith("DeepLearningEngineInterface.class") 
+        		&& !modelrunnerPath.contains(File.pathSeparator)))
         	modelrunnerPath = System.getProperty("java.class.path");
         String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
         ProtectionDomain protectionDomain = Tensorflow2Interface.class.getProtectionDomain();
-        CodeSource codeSource = protectionDomain.getCodeSource();
-        for (File ff : new File(codeSource.getLocation().getPath()).getParentFile().listFiles()) {
-        	classpath += ff.getAbsolutePath() + File.pathSeparator;
-        }
+        String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
+        String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
+	        for (File ff : new File(f_name).getParentFile().listFiles()) {
+	        	classpath += ff.getAbsolutePath() + File.pathSeparator;
+	        }
         String className = Tensorflow2Interface.class.getName();
         List<String> command = new LinkedList<String>();
-        command.add(javaBin);
+        command.add(padSpecialJavaBin(javaBin));
         command.add("-cp");
         command.add(classpath);
         command.add(className);

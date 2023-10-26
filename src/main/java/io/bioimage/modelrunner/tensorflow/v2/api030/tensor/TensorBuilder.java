@@ -21,20 +21,18 @@
 
 package io.bioimage.modelrunner.tensorflow.v2.api030.tensor;
 
-import io.bioimage.modelrunner.utils.IndexingUtils;
+import io.bioimage.modelrunner.tensor.Utils;
 
-import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.img.Img;
 import net.imglib2.type.Type;
-import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
-import net.imglib2.view.IntervalView;
 
 import org.tensorflow.Tensor;
 import org.tensorflow.ndarray.Shape;
@@ -44,7 +42,6 @@ import org.tensorflow.ndarray.buffer.FloatDataBuffer;
 import org.tensorflow.ndarray.buffer.IntDataBuffer;
 import org.tensorflow.ndarray.buffer.LongDataBuffer;
 import org.tensorflow.ndarray.impl.buffer.raw.RawDataBufferFactory;
-import org.tensorflow.proto.framework.DataType;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TFloat64;
 import org.tensorflow.types.TInt32;
@@ -124,206 +121,146 @@ public final class TensorBuilder {
 	 * Creates a {@link TType} tensor of type {@link TUint8} from an
 	 * {@link RandomAccessibleInterval} of type {@link UnsignedByteType}
 	 * 
-	 * @param imgTensor 
+	 * @param tensor 
 	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
 	 * @return The {@link TType} tensor filled with the {@link RandomAccessibleInterval} data.
 	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
 	 * not compatible
 	 */
-	public static TUint8 buildUByte(RandomAccessibleInterval<UnsignedByteType> imgTensor)
+	public static TUint8 buildUByte(RandomAccessibleInterval<UnsignedByteType> tensor)
 		throws IllegalArgumentException
 	{
-		long[] tensorShape = imgTensor.dimensionsAsLongArray();
-		Cursor<UnsignedByteType> tensorCursor;
-		if (imgTensor instanceof IntervalView) tensorCursor =
-			((IntervalView<UnsignedByteType>) imgTensor).cursor();
-		else if (imgTensor instanceof Img) tensorCursor =
-			((Img<UnsignedByteType>) imgTensor).cursor();
-		else throw new IllegalArgumentException("The data of the " + Tensor.class +
-			" has " + "to be an instance of " + Img.class + " or " +
-			IntervalView.class);
-		long flatSize = 1;
-		for (long dd : imgTensor.dimensionsAsLongArray()) {
-			flatSize *= dd;
-		}
-		byte[] flatArr = new byte[(int) flatSize];
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			byte val = tensorCursor.get().getByte();
-			flatArr[flatPos] = val;
-		}
+		tensor = Utils.transpose(tensor);
+		PrimitiveBlocks< UnsignedByteType > blocks = PrimitiveBlocks.of( tensor );
+		long[] tensorShape = tensor.dimensionsAsLongArray();
+		int size = 1;
+		for (long ll : tensorShape) size *= ll;
+		final byte[] flatArr = new byte[size];
+		int[] sArr = new int[tensorShape.length];
+		for (int i = 0; i < sArr.length; i ++)
+			sArr[i] = (int) tensorShape[i];
+		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		ByteDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TUint8 tensor = Tensor.of(TUint8.class, Shape.of(imgTensor
+		TUint8 ndarray = Tensor.of(TUint8.class, Shape.of(tensor
 			.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+		return ndarray;
 	}
 
 	/**
 	 * Creates a {@link TInt32} tensor of type {@link TInt32} from an
 	 * {@link RandomAccessibleInterval} of type {@link IntType}
 	 * 
-	 * @param imgTensor 
+	 * @param tensor 
 	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
 	 * @return The {@link TInt32} tensor filled with the {@link RandomAccessibleInterval} data.
 	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
 	 * not compatible
 	 */
-	public static TInt32 buildInt(RandomAccessibleInterval<IntType> imgTensor)
+	public static TInt32 buildInt(RandomAccessibleInterval<IntType> tensor)
 		throws IllegalArgumentException
 	{
-		long[] tensorShape = imgTensor.dimensionsAsLongArray();
-		Cursor<IntType> tensorCursor;
-		if (imgTensor instanceof IntervalView) tensorCursor =
-			((IntervalView<IntType>) imgTensor).cursor();
-		else if (imgTensor instanceof Img) tensorCursor = ((Img<IntType>) imgTensor)
-			.cursor();
-		else throw new IllegalArgumentException("The data of the " + Tensor.class +
-			" has " + "to be an instance of " + Img.class + " or " +
-			IntervalView.class);
-		long flatSize = 1;
-		for (long dd : imgTensor.dimensionsAsLongArray()) {
-			flatSize *= dd;
-		}
-		int[] flatArr = new int[(int) flatSize];
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			int val = tensorCursor.get().getInt();
-			flatArr[flatPos] = val;
-		}
+		tensor = Utils.transpose(tensor);
+		PrimitiveBlocks< IntType > blocks = PrimitiveBlocks.of( tensor );
+		long[] tensorShape = tensor.dimensionsAsLongArray();
+		int size = 1;
+		for (long ll : tensorShape) size *= ll;
+		final int[] flatArr = new int[size];
+		int[] sArr = new int[tensorShape.length];
+		for (int i = 0; i < sArr.length; i ++)
+			sArr[i] = (int) tensorShape[i];
+		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		IntDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TInt32 tensor = TInt32.tensorOf(Shape.of(imgTensor.dimensionsAsLongArray()),
+		TInt32 ndarray = TInt32.tensorOf(Shape.of(tensor.dimensionsAsLongArray()),
 			dataBuffer);
-		return tensor;
+		return ndarray;
 	}
 
 	/**
 	 * Creates a {@link TInt64} tensor of type {@link TInt64} from an
 	 * {@link RandomAccessibleInterval} of type {@link LongType}
 	 * 
-	 * @param imgTensor 
+	 * @param tensor 
 	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
 	 * @return The {@link TInt64} tensor filled with the {@link RandomAccessibleInterval} data.
 	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
 	 * not compatible
 	 */
-	private static TInt64 buildLong(RandomAccessibleInterval<LongType> imgTensor)
+	private static TInt64 buildLong(RandomAccessibleInterval<LongType> tensor)
 		throws IllegalArgumentException
 	{
-		long[] tensorShape = imgTensor.dimensionsAsLongArray();
-		Cursor<LongType> tensorCursor;
-		if (imgTensor instanceof IntervalView) tensorCursor =
-			((IntervalView<LongType>) imgTensor).cursor();
-		else if (imgTensor instanceof Img) tensorCursor =
-			((Img<LongType>) imgTensor).cursor();
-		else throw new IllegalArgumentException("The data of the " + Tensor.class +
-			" has " + "to be an instance of " + Img.class + " or " +
-			IntervalView.class);
-		long flatSize = 1;
-		for (long dd : imgTensor.dimensionsAsLongArray()) {
-			flatSize *= dd;
-		}
-		long[] flatArr = new long[(int) flatSize];
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			long val = tensorCursor.get().getLong();
-			flatArr[flatPos] = val;
-		}
+		tensor = Utils.transpose(tensor);
+		PrimitiveBlocks< LongType > blocks = PrimitiveBlocks.of( tensor );
+		long[] tensorShape = tensor.dimensionsAsLongArray();
+		int size = 1;
+		for (long ll : tensorShape) size *= ll;
+		final long[] flatArr = new long[size];
+		int[] sArr = new int[tensorShape.length];
+		for (int i = 0; i < sArr.length; i ++)
+			sArr[i] = (int) tensorShape[i];
+		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		LongDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TInt64 tensor = TInt64.tensorOf(Shape.of(imgTensor.dimensionsAsLongArray()),
+		TInt64 ndarray = TInt64.tensorOf(Shape.of(tensor.dimensionsAsLongArray()),
 			dataBuffer);
-		return tensor;
+		return ndarray;
 	}
 
 	/**
 	 * Creates a {@link TFloat32} tensor of type {@link TFloat32} from an
 	 * {@link RandomAccessibleInterval} of type {@link FloatType}
 	 * 
-	 * @param imgTensor 
+	 * @param tensor 
 	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
 	 * @return The {@link TFloat32} tensor filled with the {@link RandomAccessibleInterval} data.
 	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
 	 * not compatible
 	 */
 	public static TFloat32 buildFloat(
-		RandomAccessibleInterval<FloatType> imgTensor)
+		RandomAccessibleInterval<FloatType> tensor)
 		throws IllegalArgumentException
 	{
-		long[] tensorShape = imgTensor.dimensionsAsLongArray();
-		Cursor<FloatType> tensorCursor;
-		if (imgTensor instanceof IntervalView) tensorCursor =
-			((IntervalView<FloatType>) imgTensor).cursor();
-		else if (imgTensor instanceof Img) tensorCursor =
-			((Img<FloatType>) imgTensor).cursor();
-		else throw new IllegalArgumentException("The data of the " + Tensor.class +
-			" has " + "to be an instance of " + Img.class + " or " +
-			IntervalView.class);
-		long flatSize = 1;
-		for (long dd : imgTensor.dimensionsAsLongArray()) {
-			flatSize *= dd;
-		}
-		float[] flatArr = new float[(int) flatSize];
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			float val = tensorCursor.get().getRealFloat();
-			flatArr[flatPos] = val;
-		}
+		tensor = Utils.transpose(tensor);
+		PrimitiveBlocks< FloatType > blocks = PrimitiveBlocks.of( tensor );
+		long[] tensorShape = tensor.dimensionsAsLongArray();
+		int size = 1;
+		for (long ll : tensorShape) size *= ll;
+		final float[] flatArr = new float[size];
+		int[] sArr = new int[tensorShape.length];
+		for (int i = 0; i < sArr.length; i ++)
+			sArr[i] = (int) tensorShape[i];
+		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TFloat32 tensor = TFloat32.tensorOf(Shape.of(imgTensor
+		TFloat32 ndarray = TFloat32.tensorOf(Shape.of(tensor
 			.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+		return ndarray;
 	}
 
 	/**
 	 * Creates a {@link TFloat64} tensor of type {@link TFloat64} from an
 	 * {@link RandomAccessibleInterval} of type {@link DoubleType}
 	 * 
-	 * @param imgTensor 
+	 * @param tensor 
 	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
 	 * @return The {@link TFloat64} tensor filled with the {@link RandomAccessibleInterval} data.
 	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
 	 * not compatible
 	 */
 	private static TFloat64 buildDouble(
-		RandomAccessibleInterval<DoubleType> imgTensor)
+		RandomAccessibleInterval<DoubleType> tensor)
 		throws IllegalArgumentException
 	{
-		long[] tensorShape = imgTensor.dimensionsAsLongArray();
-		Cursor<DoubleType> tensorCursor;
-		if (imgTensor instanceof IntervalView) tensorCursor =
-			((IntervalView<DoubleType>) imgTensor).cursor();
-		else if (imgTensor instanceof Img) tensorCursor =
-			((Img<DoubleType>) imgTensor).cursor();
-		else throw new IllegalArgumentException("The data of the " + Tensor.class +
-			" has " + "to be an instance of " + Img.class + " or " +
-			IntervalView.class);
-		long flatSize = 1;
-		for (long dd : imgTensor.dimensionsAsLongArray()) {
-			flatSize *= dd;
-		}
-		double[] flatArr = new double[(int) flatSize];
-		while (tensorCursor.hasNext()) {
-			tensorCursor.fwd();
-			long[] cursorPos = tensorCursor.positionAsLongArray();
-			int flatPos = IndexingUtils.multidimensionalIntoFlatIndex(cursorPos,
-				tensorShape);
-			double val = tensorCursor.get().getRealDouble();
-			flatArr[flatPos] = val;
-		}
+		tensor = Utils.transpose(tensor);
+		PrimitiveBlocks< DoubleType > blocks = PrimitiveBlocks.of( tensor );
+		long[] tensorShape = tensor.dimensionsAsLongArray();
+		int size = 1;
+		for (long ll : tensorShape) size *= ll;
+		final double[] flatArr = new double[size];
+		int[] sArr = new int[tensorShape.length];
+		for (int i = 0; i < sArr.length; i ++)
+			sArr[i] = (int) tensorShape[i];
+		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TFloat64 tensor = TFloat64.tensorOf(Shape.of(imgTensor
+		TFloat64 ndarray = TFloat64.tensorOf(Shape.of(tensor
 			.dimensionsAsLongArray()), dataBuffer);
-		return tensor;
+		return ndarray;
 	}
 }

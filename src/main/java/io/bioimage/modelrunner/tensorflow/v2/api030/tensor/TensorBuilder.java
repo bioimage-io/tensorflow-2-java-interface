@@ -130,6 +130,7 @@ public final class TensorBuilder {
 	public static TUint8 buildUByte(RandomAccessibleInterval<UnsignedByteType> tensor)
 		throws IllegalArgumentException
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< UnsignedByteType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -141,8 +142,7 @@ public final class TensorBuilder {
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		ByteDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TUint8 ndarray = Tensor.of(TUint8.class, Shape.of(tensor
-			.dimensionsAsLongArray()), dataBuffer);
+		TUint8 ndarray = Tensor.of(TUint8.class, Shape.of(ogShape), dataBuffer);
 		return ndarray;
 	}
 
@@ -159,6 +159,7 @@ public final class TensorBuilder {
 	public static TInt32 buildInt(RandomAccessibleInterval<IntType> tensor)
 		throws IllegalArgumentException
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< IntType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -170,7 +171,7 @@ public final class TensorBuilder {
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		IntDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TInt32 ndarray = TInt32.tensorOf(Shape.of(tensor.dimensionsAsLongArray()),
+		TInt32 ndarray = TInt32.tensorOf(Shape.of(ogShape),
 			dataBuffer);
 		return ndarray;
 	}
@@ -188,6 +189,7 @@ public final class TensorBuilder {
 	private static TInt64 buildLong(RandomAccessibleInterval<LongType> tensor)
 		throws IllegalArgumentException
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< LongType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -199,7 +201,7 @@ public final class TensorBuilder {
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		LongDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TInt64 ndarray = TInt64.tensorOf(Shape.of(tensor.dimensionsAsLongArray()),
+		TInt64 ndarray = TInt64.tensorOf(Shape.of(ogShape),
 			dataBuffer);
 		return ndarray;
 	}
@@ -218,6 +220,7 @@ public final class TensorBuilder {
 		RandomAccessibleInterval<FloatType> tensor)
 		throws IllegalArgumentException
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< FloatType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -229,8 +232,7 @@ public final class TensorBuilder {
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TFloat32 ndarray = TFloat32.tensorOf(Shape.of(tensor
-			.dimensionsAsLongArray()), dataBuffer);
+		TFloat32 ndarray = TFloat32.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;
 	}
 
@@ -248,6 +250,7 @@ public final class TensorBuilder {
 		RandomAccessibleInterval<DoubleType> tensor)
 		throws IllegalArgumentException
 	{
+		long[] ogShape = tensor.dimensionsAsLongArray();
 		tensor = Utils.transpose(tensor);
 		PrimitiveBlocks< DoubleType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
@@ -259,8 +262,7 @@ public final class TensorBuilder {
 			sArr[i] = (int) tensorShape[i];
 		blocks.copy( new long[tensorShape.length], flatArr, sArr );
 		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
-		TFloat64 ndarray = TFloat64.tensorOf(Shape.of(tensor
-			.dimensionsAsLongArray()), dataBuffer);
+		TFloat64 ndarray = TFloat64.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;
 	}
 }

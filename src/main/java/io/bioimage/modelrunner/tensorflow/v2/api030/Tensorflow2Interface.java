@@ -344,6 +344,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 			for (Tensor tensor : inputTensors) {args.add(getFilename4Tensor(tensor.getName()) + INPUT_FILE_TERMINATION);}
 			for (Tensor tensor : outputTensors) {args.add(getFilename4Tensor(tensor.getName()) + OUTPUT_FILE_TERMINATION);}
 			ProcessBuilder builder = new ProcessBuilder(args);
+			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
 	        process = builder.start();
 	        int result = process.waitFor();
 	        process.destroy();

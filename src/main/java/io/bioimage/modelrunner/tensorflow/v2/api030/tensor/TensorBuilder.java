@@ -22,7 +22,7 @@
 package io.bioimage.modelrunner.tensorflow.v2.api030.tensor;
 
 import io.bioimage.modelrunner.tensor.Utils;
-
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.img.Img;
@@ -33,6 +33,10 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
+import net.imglib2.view.Views;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.tensorflow.Tensor;
 import org.tensorflow.ndarray.Shape;
@@ -131,8 +135,10 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< UnsignedByteType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -140,7 +146,13 @@ public final class TensorBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<UnsignedByteType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().getByte();
+		}
 		ByteDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
 		TUint8 ndarray = Tensor.of(TUint8.class, Shape.of(ogShape), dataBuffer);
 		return ndarray;
@@ -160,8 +172,10 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< IntType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -169,7 +183,13 @@ public final class TensorBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<IntType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().get();
+		}
 		IntDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
 		TInt32 ndarray = TInt32.tensorOf(Shape.of(ogShape),
 			dataBuffer);
@@ -190,8 +210,10 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< LongType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -199,7 +221,13 @@ public final class TensorBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<LongType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().get();
+		}
 		LongDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
 		TInt64 ndarray = TInt64.tensorOf(Shape.of(ogShape),
 			dataBuffer);
@@ -221,8 +249,10 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< FloatType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -230,7 +260,13 @@ public final class TensorBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<FloatType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().get();
+		}
 		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
 		TFloat32 ndarray = TFloat32.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;
@@ -251,8 +287,10 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
+		if (CommonUtils.int32Overflows(ogShape))
+			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
+								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
-		PrimitiveBlocks< DoubleType > blocks = PrimitiveBlocks.of( tensor );
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
 		for (long ll : tensorShape) size *= ll;
@@ -260,7 +298,13 @@ public final class TensorBuilder {
 		int[] sArr = new int[tensorShape.length];
 		for (int i = 0; i < sArr.length; i ++)
 			sArr[i] = (int) tensorShape[i];
-		blocks.copy( tensor.minAsLongArray(), flatArr, sArr );
+
+		Cursor<DoubleType> cursor = Views.flatIterable(tensor).cursor();
+		int i = 0;
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			flatArr[i ++] = cursor.get().get();
+		}
 		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(flatArr, false);
 		TFloat64 ndarray = TFloat64.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;

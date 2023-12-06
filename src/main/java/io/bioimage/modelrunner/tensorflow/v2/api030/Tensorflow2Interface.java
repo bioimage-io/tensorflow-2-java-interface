@@ -350,8 +350,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	        process.destroy();
 	        if (result != 0)
 	    		throw new RunModelException("Error executing the Tensorflow 2 model in"
-	        			+ " a separate process. The process was not terminated correctly.");
-	        			// TODO remove + System.lineSeparator() + readProcessStringOutput(process));
+	        			+ " a separate process. The process was not terminated correctly."
+	        			+ System.lineSeparator() + readProcessStringOutput(process));
 		} catch (RunModelException e) {
 			closeModel();
 			throw e;

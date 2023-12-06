@@ -26,7 +26,9 @@ import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.img.Img;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -96,7 +98,7 @@ public final class TensorBuilder {
 	 * @throws IllegalArgumentException if the type of the {@link RandomAccessibleInterval}
 	 *  is not supported
 	 */
-	public static <T extends Type<T>> TType build(
+	public static <T extends RealType<T> & NativeType<T>> TType build(
 		RandomAccessibleInterval<T> array) throws IllegalArgumentException
 	{
 		// Create an Icy sequence of the same type of the tensor

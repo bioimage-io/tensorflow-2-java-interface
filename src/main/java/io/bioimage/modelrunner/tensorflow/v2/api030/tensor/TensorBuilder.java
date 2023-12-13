@@ -33,6 +33,7 @@ import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Cast;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
@@ -101,19 +102,19 @@ public final class TensorBuilder {
 	{
 		// Create an Icy sequence of the same type of the tensor
 		if (Util.getTypeFromInterval(array) instanceof UnsignedByteType) {
-			return buildUByte((RandomAccessibleInterval<UnsignedByteType>) array);
+			return buildUByte(Cast.unchecked(array));
 		}
 		else if (Util.getTypeFromInterval(array) instanceof IntType) {
-			return buildInt((RandomAccessibleInterval<IntType>) array);
+			return buildInt(Cast.unchecked(array));
 		}
 		else if (Util.getTypeFromInterval(array) instanceof FloatType) {
-			return buildFloat((RandomAccessibleInterval<FloatType>) array);
+			return buildFloat(Cast.unchecked(array));
 		}
 		else if (Util.getTypeFromInterval(array) instanceof DoubleType) {
-			return buildDouble((RandomAccessibleInterval<DoubleType>) array);
+			return buildDouble(Cast.unchecked(array));
 		}
 		else if (Util.getTypeFromInterval(array) instanceof LongType) {
-			return buildLong((RandomAccessibleInterval<LongType>) array);
+			return buildLong(Cast.unchecked(array));
 		}
 		else {
 			throw new IllegalArgumentException("Unsupported tensor type: " + Util

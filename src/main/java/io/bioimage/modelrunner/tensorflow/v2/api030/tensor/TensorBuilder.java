@@ -22,12 +22,11 @@
 package io.bioimage.modelrunner.tensorflow.v2.api030.tensor;
 
 import io.bioimage.modelrunner.tensor.Utils;
+import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
-import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
@@ -37,7 +36,6 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.tensorflow.Tensor;

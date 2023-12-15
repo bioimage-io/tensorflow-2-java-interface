@@ -143,6 +143,10 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
      * File extension for the temporal files used for interprocessing
      */
     final private static String FILE_EXTENSION = ".dat";
+	/**
+	 * Name without vesion of the JAR created for this library
+	 */
+	private static final String JAR_FILE_NAME = "dl-modelrunner-tensorflow-";
 
     /**
      * The loaded Tensorflow 2 model
@@ -671,6 +675,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
         String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
         String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
 	        for (File ff : new File(f_name).getParentFile().listFiles()) {
+	        	if (ff.getName().startsWith(JAR_FILE_NAME) && !ff.getAbsolutePath().equals(f_name))
+	        		continue;
 	        	classpath += ff.getAbsolutePath() + File.pathSeparator;
 	        }
         String className = Tensorflow2Interface.class.getName();

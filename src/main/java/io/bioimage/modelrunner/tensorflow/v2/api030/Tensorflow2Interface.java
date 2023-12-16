@@ -305,15 +305,17 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		Session.Runner runner = session.runner();
 		List<String> inputListNames = new ArrayList<String>();
 		List<TType> inTensors = new ArrayList<TType>();
+		int c = 0;
 		for (Tensor tt : inputTensors) {
 			inputListNames.add(tt.getName());
 			TType inT = TensorBuilder.build(tt);
 			inTensors.add(inT);
-			runner.feed(getModelInputName(tt.getName()), inT);
+			String inputName = getModelInputName(tt.getName(), c ++);
+			runner.feed(inputName, inT);
 		}
-
+		c = 0;
 		for (Tensor tt : outputTensors)
-			runner = runner.fetch(getModelOutputName(tt.getName()));
+			runner = runner.fetch(getModelOutputName(tt.getName(), c ++));
 		// Run runner
 		List<org.tensorflow.Tensor> resultPatchTensors = runner.run();
 
@@ -420,10 +422,14 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 * the signature input name.
 	 * 
 	 * @param inputName Signature input name.
+	 * @param i position of the input of interest in the list of inputs
 	 * @return The readable input name.
 	 */
-	public static String getModelInputName(String inputName) {
+	public static String getModelInputName(String inputName, int i) {
 		TensorInfo inputInfo = sig.getInputsMap().getOrDefault(inputName, null);
+		if (inputInfo == null) {
+			inputInfo = sig.getInputsMap().values().stream().collect(Collectors.toList()).get(i);
+		}
 		if (inputInfo != null) {
 			String modelInputName = inputInfo.getName();
 			if (modelInputName != null) {
@@ -446,10 +452,14 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 * given the signature output name.
 	 * 
 	 * @param outputName Signature output name.
+	 * @param i position of the input of interest in the list of inputs
 	 * @return The readable output name.
 	 */
-	public static String getModelOutputName(String outputName) {
+	public static String getModelOutputName(String outputName, int i) {
 		TensorInfo outputInfo = sig.getOutputsMap().getOrDefault(outputName, null);
+		if (outputInfo == null) {
+			outputInfo = sig.getOutputsMap().values().stream().collect(Collectors.toList()).get(i);
+		}
 		if (outputInfo != null) {
 			String modelOutputName = outputInfo.getName();
 			if (modelOutputName.endsWith(":0")) {

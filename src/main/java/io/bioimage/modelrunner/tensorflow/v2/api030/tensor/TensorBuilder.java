@@ -136,9 +136,9 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
-		if (CommonUtils.int32Overflows(ogShape))
+		if (CommonUtils.int32Overflows(ogShape, 1))
 			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
-								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
+								+ " is too big. Max number of elements per ubyte tensor supported: " + Integer.MAX_VALUE);
 		tensor = Utils.transpose(tensor);
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
@@ -173,9 +173,9 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
-		if (CommonUtils.int32Overflows(ogShape))
+		if (CommonUtils.int32Overflows(ogShape, 4))
 			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
-								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
+								+ " is too big. Max number of elements per int tensor supported: " + Integer.MAX_VALUE / 4);
 		tensor = Utils.transpose(tensor);
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
@@ -211,9 +211,9 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
-		if (CommonUtils.int32Overflows(ogShape))
+		if (CommonUtils.int32Overflows(ogShape, 8))
 			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
-								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
+								+ " is too big. Max number of elements per long tensor supported: " + Integer.MAX_VALUE / 8);
 		tensor = Utils.transpose(tensor);
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
@@ -250,9 +250,9 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
-		if (CommonUtils.int32Overflows(ogShape))
+		if (CommonUtils.int32Overflows(ogShape, 4))
 			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
-								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
+								+ " is too big. Max number of elements per float tensor supported: " + Integer.MAX_VALUE / 4);
 		tensor = Utils.transpose(tensor);
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;
@@ -288,9 +288,9 @@ public final class TensorBuilder {
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
-		if (CommonUtils.int32Overflows(ogShape))
+		if (CommonUtils.int32Overflows(ogShape, 8))
 			throw new IllegalArgumentException("Provided tensor with shape " + Arrays.toString(ogShape) 
-								+ " is too big. Max number of elements per tensor supported: " + Integer.MAX_VALUE);
+								+ " is too big. Max number of elements per double tensor supported: " + Integer.MAX_VALUE / 8);
 		tensor = Utils.transpose(tensor);
 		long[] tensorShape = tensor.dimensionsAsLongArray();
 		int size = 1;

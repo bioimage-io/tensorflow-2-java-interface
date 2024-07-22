@@ -20,7 +20,6 @@
  */
 package io.bioimage.modelrunner.tensorflow.v2.api030.shm;
 
-import io.bioimage.modelrunner.tensor.Utils;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
 
@@ -35,7 +34,11 @@ import org.tensorflow.types.TInt64;
 import org.tensorflow.types.TUint8;
 import org.tensorflow.types.family.TType;
 
+import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.real.FloatType;
 
 /**
  * A {@link RandomAccessibleInterval} builder for TensorFlow {@link Tensor} objects.
@@ -121,20 +124,21 @@ public final class ShmBuilder
 	 * 	The {@link TInt32} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link IntType}.
 	 */
-    private static void buildFromTensorInt(TInt32 tensor)
+    private static void buildFromTensorInt(TInt32 tensor, String memoryName)
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per int output tensor supported: " + Integer.MAX_VALUE / 4);
-		long[] tensorShape = new long[arrayShape.length];
-		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
-		int totalSize = 1;
-		for (long i : tensorShape) {totalSize *= i;}
-        int[] flatArr = new int[totalSize];
-        tensor.asRawTensor().data().asInts().read(flatArr);
-		RandomAccessibleInterval<IntType> rai = ArrayImgs.ints(flatArr, tensorShape);
-		return Utils.transpose(rai);
+
+        SharedMemoryArray shma = SharedMemoryArray.create(arrayShape, new IntType(), false, true);
+        ByteBuffer buff = shma.getDataBuffer();
+        int totalSize = 4;
+		for (long i : arrayShape) {totalSize *= i;}
+    	byte[] flatArr = new byte[buff.capacity()];
+    	buff.get(flatArr);
+        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
+        shma.setBuffer(ByteBuffer.wrap(flatArr));
     }
 
 	/**
@@ -144,20 +148,21 @@ public final class ShmBuilder
 	 * 	The {@link TFloat32} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link FloatType}.
 	 */
-    private static void buildFromTensorFloat(TFloat32 tensor)
+    private static void buildFromTensorFloat(TFloat32 tensor, String memoryName)
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per float output tensor supported: " + Integer.MAX_VALUE / 4);
-		long[] tensorShape = new long[arrayShape.length];
-		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
-		int totalSize = 1;
-		for (long i : tensorShape) {totalSize *= i;}
-        float[] flatArr = new float[totalSize];
-        tensor.asRawTensor().data().asFloats().read(flatArr);
-		RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(flatArr, tensorShape);
-		return Utils.transpose(rai);
+
+        SharedMemoryArray shma = SharedMemoryArray.create(arrayShape, new FloatType(), false, true);
+        ByteBuffer buff = shma.getDataBuffer();
+        int totalSize = 1;
+		for (long i : arrayShape) {totalSize *= i;}
+    	byte[] flatArr = new byte[buff.capacity()];
+    	buff.get(flatArr);
+        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
+        shma.setBuffer(ByteBuffer.wrap(flatArr));
     }
 
 	/**
@@ -167,20 +172,21 @@ public final class ShmBuilder
 	 * 	The {@link TFloat64} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link DoubleType}.
 	 */
-    private static void buildFromTensorDouble(TFloat64 tensor)
+    private static void buildFromTensorDouble(TFloat64 tensor, String memoryName)
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per double output tensor supported: " + Integer.MAX_VALUE / 8);
-		long[] tensorShape = new long[arrayShape.length];
-		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
-		int totalSize = 1;
-		for (long i : tensorShape) {totalSize *= i;}
-        double[] flatArr = new double[totalSize];
-        tensor.asRawTensor().data().asDoubles().read(flatArr);
-		RandomAccessibleInterval<DoubleType> rai = ArrayImgs.doubles(flatArr, tensorShape);
-		return Utils.transpose(rai);
+
+        SharedMemoryArray shma = SharedMemoryArray.create(arrayShape, new DoubleType(), false, true);
+        ByteBuffer buff = shma.getDataBuffer();
+        int totalSize = 1;
+		for (long i : arrayShape) {totalSize *= i;}
+    	byte[] flatArr = new byte[buff.capacity()];
+    	buff.get(flatArr);
+        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
+        shma.setBuffer(ByteBuffer.wrap(flatArr));
     }
 
 	/**
@@ -190,19 +196,21 @@ public final class ShmBuilder
 	 * 	The {@link TInt64} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link LongType}.
 	 */
-    private static void buildFromTensorLong(TInt64 tensor)
+    private static void buildFromTensorLong(TInt64 tensor, String memoryName)
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per long output tensor supported: " + Integer.MAX_VALUE / 8);
-		long[] tensorShape = new long[arrayShape.length];
-		for (int i = 0; i < arrayShape.length; i ++) tensorShape[i] = arrayShape[arrayShape.length - 1 - i];
-		int totalSize = 1;
-		for (long i : tensorShape) {totalSize *= i;}
-        long[] flatArr = new long[totalSize];
-        tensor.asRawTensor().data().asLongs().read(flatArr);
-		RandomAccessibleInterval<LongType> rai = ArrayImgs.longs(flatArr, tensorShape);
-		return Utils.transpose(rai);
+		
+
+        SharedMemoryArray shma = SharedMemoryArray.create(arrayShape, new LongType(), false, true);
+        ByteBuffer buff = shma.getDataBuffer();
+        int totalSize = 1;
+		for (long i : arrayShape) {totalSize *= i;}
+    	byte[] flatArr = new byte[buff.capacity()];
+    	buff.get(flatArr);
+        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
+        shma.setBuffer(ByteBuffer.wrap(flatArr));
     }
 }

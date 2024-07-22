@@ -163,9 +163,9 @@ public final class ShmBuilder
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per float output tensor supported: " + Integer.MAX_VALUE / 4);
 
-        SharedMemoryArray shma = SharedMemoryArray.create(arrayShape, new FloatType(), false, true);
+        SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
         ByteBuffer buff = shma.getDataBuffer();
-        int totalSize = 1;
+        int totalSize = 4;
 		for (long i : arrayShape) {totalSize *= i;}
     	byte[] flatArr = new byte[buff.capacity()];
     	buff.get(flatArr);

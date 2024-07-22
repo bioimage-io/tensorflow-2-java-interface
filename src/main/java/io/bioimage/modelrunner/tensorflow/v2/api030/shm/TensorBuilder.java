@@ -33,6 +33,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Cast;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.Arrays;
 
 import org.tensorflow.Tensor;
@@ -196,7 +197,10 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(buff.array(), false).asFloats();
+		FloatBuffer floatBuff = buff.asFloatBuffer();
+		float[] floatArray = new float[floatBuff.capacity()];
+		floatBuff.get(floatArray);
+		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(floatArray, false);
 		TFloat32 ndarray = TFloat32.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;
 	}

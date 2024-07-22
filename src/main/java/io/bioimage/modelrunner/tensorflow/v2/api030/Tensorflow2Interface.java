@@ -56,6 +56,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -305,7 +306,6 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		// Fill the agnostic output tensors list with data from the inference result
 		fillOutputTensors(resultPatchTensors, outputTensors);
 		// Close the remaining resources
-		session.close();
 		for (TType tt : inTensors) {
 			tt.close();
 		}
@@ -337,12 +337,12 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		List<org.tensorflow.Tensor> resultPatchTensors = runner.run();
 
 		// Fill the agnostic output tensors list with data from the inference result
+		c = 0;
 		for (String ee : outputs) {
 			Map<String, Object> decoded = Types.decode(ee);
-			ShmBuilder.build((TType) resultPatchTensors.get(c), (String) decoded.get(MEM_NAME_KEY));
+			ShmBuilder.build((TType) resultPatchTensors.get(c ++), (String) decoded.get(MEM_NAME_KEY));
 		}
 		// Close the remaining resources
-		session.close();
 		for (TType tt : inTensors) {
 			tt.close();
 		}
@@ -741,16 +741,18 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
         	pi.loadModel(modelFolder, modelSourc);
         	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 512, 512, 1});
         	Tensor<?> inp = Tensor.build("aa", "byxc", rai);
-        	//Tensor<?> out = Tensor.buildBlankTensor("oo", "bcyx", new long[] {1, 2, 512, 512}, new FloatType());
-        	Tensor<?> out = Tensor.buildEmptyTensor("oo", "byxc");
+        	Tensor<?> out = Tensor.buildBlankTensor("oo", "bcyx", new long[] {1, 512, 512, 33}, new FloatType());
+        	//Tensor<?> out = Tensor.buildEmptyTensor("oo", "byxc");
         	List<Tensor<?>> ins = new ArrayList<Tensor<?>>();
         	List<Tensor<?>> ous = new ArrayList<Tensor<?>>();
         	ins.add(inp);
         	ous.add(out);
         	pi.run(ins, ous);
+        	pi.run(ins, ous);
         	System.out.println(false);
     	} catch (Exception ex) {
-    		pi.closeModel();
     	}
+		pi.closeModel();
+    	
     }
 }

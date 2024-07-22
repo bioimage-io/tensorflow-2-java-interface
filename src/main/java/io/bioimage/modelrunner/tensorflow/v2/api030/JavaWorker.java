@@ -81,7 +81,6 @@ public class JavaWorker {
 		this.reportLaunch();
 		try {
 			if (script.equals("loadModel")) {
-				System.out.println((String) inputs.get("modelFolder"));
 				ti.loadModel((String) inputs.get("modelFolder"), null);
 			} else if (script.equals("inference")) {
 				ti.runFromShmas((List<String>) inputs.get("inputs"), (List<String>) inputs.get("outputs"));
@@ -140,7 +139,6 @@ public class JavaWorker {
 	}
 	
 	private void fail(String error) {
-		System.out.println(error);
 		Map<String, Object> args = null;
 		if (error != null) {
 			args = new HashMap<String, Object>();

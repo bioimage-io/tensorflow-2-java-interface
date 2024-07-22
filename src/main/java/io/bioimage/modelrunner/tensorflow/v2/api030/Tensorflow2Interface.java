@@ -41,7 +41,10 @@ import io.bioimage.modelrunner.tensorflow.v2.api030.tensor.TensorBuilder;
 import io.bioimage.modelrunner.utils.CommonUtils;
 import io.bioimage.modelrunner.utils.Constants;
 import io.bioimage.modelrunner.utils.ZipUtils;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
+import net.imglib2.util.Cast;
+import net.imglib2.util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,6 +59,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.tensorflow.SavedModelBundle;
@@ -280,7 +285,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		List<String> inputListNames = new ArrayList<String>();
 		List<TType> inTensors = new ArrayList<TType>();
 		int c = 0;
-		for (Tensor tt : inputTensors) {
+		for (Tensor<?> tt : inputTensors) {
 			inputListNames.add(tt.getName());
 			TType inT = TensorBuilder.build(tt);
 			inTensors.add(inT);
@@ -288,13 +293,53 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 			runner.feed(inputName, inT);
 		}
 		c = 0;
-		for (Tensor tt : outputTensors)
+		for (Tensor<?> tt : outputTensors)
 			runner = runner.fetch(getModelOutputName(tt.getName(), c ++));
 		// Run runner
 		List<org.tensorflow.Tensor> resultPatchTensors = runner.run();
 
 		// Fill the agnostic output tensors list with data from the inference result
 		fillOutputTensors(resultPatchTensors, outputTensors);
+		// Close the remaining resources
+		session.close();
+		for (TType tt : inTensors) {
+			tt.close();
+		}
+		for (org.tensorflow.Tensor tt : resultPatchTensors) {
+			tt.close();
+		}
+	}
+	
+	protected void runFromShmas(LinkedHashMap<String, Object> inputs, LinkedHashMap<String, Object> outputs) {
+		Session session = model.session();
+		Session.Runner runner = session.runner();
+		
+		List<TType> inTensors = new ArrayList<TType>();
+		int c = 0;
+		for (Entry<String, Object> ee : inputs.entrySet()) {
+			Map<String, Object> decoded = Types.decode((String) ee.getValue());
+			SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
+			TType inT = io.bioimage.modelrunner.tensorflow.v2.api030.shm.TensorBuilder.build(shma);
+			inTensors.add(inT);
+			String inputName = getModelInputName(ee.getKey(), c ++);
+			runner.feed(inputName, inT);
+		}
+		
+		c = 0;
+		for (Entry<String, Object> ee : outputs.entrySet())
+			runner = runner.fetch(getModelOutputName(ee.getKey(), c ++));
+		// Run runner
+		List<org.tensorflow.Tensor> resultPatchTensors = runner.run();
+
+		// Fill the agnostic output tensors list with data from the inference result
+		for (Entry<String, Object> ee : outputs.entrySet()) {
+			Map<String, Object> decoded = Types.decode((String) ee.getValue());
+			SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
+			TType inT = io.bioimage.modelrunner.tensorflow.v2.api030.shm.TensorBuilder.build(shma);
+			inTensors.add(inT);
+			String inputName = getModelInputName(ee.getKey(), c ++);
+			runner.feed(inputName, inT);
+		}
 		// Close the remaining resources
 		session.close();
 		for (TType tt : inTensors) {
@@ -322,9 +367,34 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		modifyForWinCmd(encIns);
 		LinkedHashMap<String, String> encOuts = encodeOutputs(outputTensors);
 		modifyForWinCmd(encOuts);
+		LinkedHashMap<String, Object> args = new LinkedHashMap<String, Object>();
+		args.put("inputs", encIns);
+		args.put("outputs", encOuts);
+
 		try {
+			Task task = runner.task("inference", args);
+			task.waitFor();
+			if (task.status == TaskStatus.CANCELED)
+				throw new RuntimeException();
+			else if (task.status == TaskStatus.FAILED)
+				throw new RuntimeException();
+			else if (task.status == TaskStatus.CRASHED)
+				throw new RuntimeException();
+			for (int i = 0; i < outputTensors.size(); i ++) {
+	        	String name = (String) Types.decode(encOuts.get(outputTensors.get(i).getName())).get(MEM_NAME_KEY);
+	        	SharedMemoryArray shm = shmaOutputList.stream()
+	        			.filter(ss -> ss.getName().equals(name)).findFirst().orElse(null);
+	        	if (shm == null) {
+	        		shm = SharedMemoryArray.read(name);
+	        		shmaOutputList.add(shm);
+	        	}
+	        	RandomAccessibleInterval<?> rai = shm.getSharedRAI();
+	        	outputTensors.get(i).setData(Tensor.createCopyOfRaiInWantedDataType(Cast.unchecked(rai), Util.getTypeFromInterval(Cast.unchecked(rai))));
+	        }
 		} catch (Exception e) {
 			closeShmas();
+			if (e instanceof RunModelException)
+				throw (RunModelException) e;
 			throw new RunModelException(Types.stackTrace(e));
 		}
 		closeShmas();

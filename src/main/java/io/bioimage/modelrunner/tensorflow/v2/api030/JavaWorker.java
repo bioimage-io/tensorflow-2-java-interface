@@ -3,10 +3,12 @@ package io.bioimage.modelrunner.tensorflow.v2.api030;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import io.bioimage.modelrunner.apposed.appose.Types;
+import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.apposed.appose.Service.RequestType;
 import io.bioimage.modelrunner.apposed.appose.Service.ResponseType;
 
@@ -78,12 +80,13 @@ public class JavaWorker {
 		
 		this.reportLaunch();
 		try {
-			if (script.equals("loadModel"))
+			if (script.equals("loadModel")) {
 				ti.loadModel((String) inputs.get("modelFolder"), null);
-			else if (script.equals("inference"))
-				ti.run(null, null);
-			else if (script.equals("close"))
+			} else if (script.equals("inference")) {
+				ti.runFromShmas((LinkedHashMap<String, Object>) inputs.get("inputs"), (LinkedHashMap<String, Object>) inputs.get("outputs"));
+			} else if (script.equals("close")) {
 				ti.closeModel();
+			}
 		} catch(Exception ex) {
 			this.fail(Types.stackTrace(ex.getCause()));
 			return;

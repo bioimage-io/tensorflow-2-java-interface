@@ -36,6 +36,7 @@ import io.bioimage.modelrunner.exceptions.RunModelException;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
+import io.bioimage.modelrunner.tensorflow.v2.api030.shm.ShmBuilder;
 import io.bioimage.modelrunner.tensorflow.v2.api030.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.tensorflow.v2.api030.tensor.TensorBuilder;
 import io.bioimage.modelrunner.utils.CommonUtils;
@@ -310,7 +311,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		}
 	}
 	
-	protected void runFromShmas(LinkedHashMap<String, Object> inputs, LinkedHashMap<String, Object> outputs) {
+	protected void runFromShmas(LinkedHashMap<String, Object> inputs, LinkedHashMap<String, Object> outputs) throws IOException {
 		Session session = model.session();
 		Session.Runner runner = session.runner();
 		
@@ -320,6 +321,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 			Map<String, Object> decoded = Types.decode((String) ee.getValue());
 			SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
 			TType inT = io.bioimage.modelrunner.tensorflow.v2.api030.shm.TensorBuilder.build(shma);
+			if (PlatformDetection.isWindows()) shma.close();
 			inTensors.add(inT);
 			String inputName = getModelInputName(ee.getKey(), c ++);
 			runner.feed(inputName, inT);
@@ -334,11 +336,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		// Fill the agnostic output tensors list with data from the inference result
 		for (Entry<String, Object> ee : outputs.entrySet()) {
 			Map<String, Object> decoded = Types.decode((String) ee.getValue());
-			SharedMemoryArray shma = SharedMemoryArray.read((String) decoded.get(MEM_NAME_KEY));
-			TType inT = io.bioimage.modelrunner.tensorflow.v2.api030.shm.TensorBuilder.build(shma);
-			inTensors.add(inT);
-			String inputName = getModelInputName(ee.getKey(), c ++);
-			runner.feed(inputName, inT);
+			ShmBuilder.build((TType) resultPatchTensors.get(c), (String) decoded.get(MEM_NAME_KEY));
 		}
 		// Close the remaining resources
 		session.close();
@@ -498,6 +496,19 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	@Override
 	public void closeModel() {
 		if (this.interprocessing && runner != null) {
+			Task task;
+			try {
+				task = runner.task("close");
+				task.waitFor();
+			} catch (IOException | InterruptedException e) {
+				throw new RuntimeException(Types.stackTrace(e));
+			}
+			if (task.status == TaskStatus.CANCELED)
+				throw new RuntimeException();
+			else if (task.status == TaskStatus.FAILED)
+				throw new RuntimeException();
+			else if (task.status == TaskStatus.CRASHED)
+				throw new RuntimeException();
 			this.runner.close();
 			return;
 		} else if (this.interprocessing) {

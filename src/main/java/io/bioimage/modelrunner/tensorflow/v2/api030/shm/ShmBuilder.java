@@ -20,9 +20,11 @@
  */
 package io.bioimage.modelrunner.tensorflow.v2.api030.shm;
 
+import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -65,8 +67,9 @@ public final class ShmBuilder
 	 * 	The {@link TType} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the {@link TType} tensor.
 	 * @throws IllegalArgumentException If the {@link TType} tensor type is not supported.
+	 * @throws IOException 
 	 */
-    public static void build(TType tensor, String memoryName) throws IllegalArgumentException
+    public static void build(TType tensor, String memoryName) throws IllegalArgumentException, IOException
     {
     	if (tensor instanceof TUint8)
         {
@@ -100,8 +103,9 @@ public final class ShmBuilder
 	 * @param tensor 
 	 * 	The {@link TUint8} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link UnsignedByteType}.
+	 * @throws IOException 
 	 */
-    private static void buildFromTensorUByte(TUint8 tensor, String memoryName)
+    private static void buildFromTensorUByte(TUint8 tensor, String memoryName) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -115,6 +119,7 @@ public final class ShmBuilder
     	buff.get(flatArr);
         tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
         shma.setBuffer(ByteBuffer.wrap(flatArr));
+        if (PlatformDetection.isWindows()) shma.close();
     }
 
 	/**
@@ -123,8 +128,9 @@ public final class ShmBuilder
 	 * @param tensor 
 	 * 	The {@link TInt32} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link IntType}.
+	 * @throws IOException 
 	 */
-    private static void buildFromTensorInt(TInt32 tensor, String memoryName)
+    private static void buildFromTensorInt(TInt32 tensor, String memoryName) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
@@ -139,6 +145,7 @@ public final class ShmBuilder
     	buff.get(flatArr);
         tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
         shma.setBuffer(ByteBuffer.wrap(flatArr));
+        if (PlatformDetection.isWindows()) shma.close();
     }
 
 	/**
@@ -147,8 +154,9 @@ public final class ShmBuilder
 	 * @param tensor 
 	 * 	The {@link TFloat32} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link FloatType}.
+	 * @throws IOException 
 	 */
-    private static void buildFromTensorFloat(TFloat32 tensor, String memoryName)
+    private static void buildFromTensorFloat(TFloat32 tensor, String memoryName) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
@@ -163,6 +171,7 @@ public final class ShmBuilder
     	buff.get(flatArr);
         tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
         shma.setBuffer(ByteBuffer.wrap(flatArr));
+        if (PlatformDetection.isWindows()) shma.close();
     }
 
 	/**
@@ -171,8 +180,9 @@ public final class ShmBuilder
 	 * @param tensor 
 	 * 	The {@link TFloat64} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link DoubleType}.
+	 * @throws IOException 
 	 */
-    private static void buildFromTensorDouble(TFloat64 tensor, String memoryName)
+    private static void buildFromTensorDouble(TFloat64 tensor, String memoryName) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
@@ -187,6 +197,7 @@ public final class ShmBuilder
     	buff.get(flatArr);
         tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
         shma.setBuffer(ByteBuffer.wrap(flatArr));
+        if (PlatformDetection.isWindows()) shma.close();
     }
 
 	/**
@@ -195,8 +206,9 @@ public final class ShmBuilder
 	 * @param tensor 
 	 * 	The {@link TInt64} tensor data is read from.
 	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link LongType}.
+	 * @throws IOException 
 	 */
-    private static void buildFromTensorLong(TInt64 tensor, String memoryName)
+    private static void buildFromTensorLong(TInt64 tensor, String memoryName) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
@@ -212,5 +224,6 @@ public final class ShmBuilder
     	buff.get(flatArr);
         tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
         shma.setBuffer(ByteBuffer.wrap(flatArr));
+        if (PlatformDetection.isWindows()) shma.close();
     }
 }

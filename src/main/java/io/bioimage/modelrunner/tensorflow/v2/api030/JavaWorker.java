@@ -1,6 +1,8 @@
-package org.apposed.appose;
+package io.bioimage.modelrunner.tensorflow.v2.api030;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -10,17 +12,23 @@ import io.bioimage.modelrunner.apposed.appose.Service.ResponseType;
 
 public class JavaWorker {
 	
-	private static HashMap<Object, Object> tasks = new HashMap<Object, Object>();
+	private static LinkedHashMap<String, Object> tasks = new LinkedHashMap<String, Object>();
 	
 	private final String uuid;
 	
-	private HashMap<Object, Object> outputs = new HashMap<Object, Object>();
-	
+	private final Tensorflow2Interface ti;
+		
 	private boolean cancelRequested = false;
 	
 	public static void main(String[] args) {
     	
     	try(Scanner scanner = new Scanner(System.in)){
+    		Tensorflow2Interface ti;
+    		try {
+				ti = new Tensorflow2Interface(false);
+			} catch (IOException | URISyntaxException e) {
+				return;
+			}
             
             while (true) {
             	String line;
@@ -38,8 +46,8 @@ public class JavaWorker {
                 
                 if (requestType.equals(RequestType.EXECUTE.toString())) {
                 	String script = (String) request.get("script");
-                	Map<String, Object> inputs = (Map<String, Object>) request.get("inputs");
-                	JavaWorker task = new JavaWorker(uuid);
+                	LinkedHashMap<String, Object> inputs = (LinkedHashMap<String, Object>) request.get("inputs");
+                	JavaWorker task = new JavaWorker(uuid, ti);
                 	tasks.put(uuid, task);
                 	task.start(script, inputs);
                 } else if (requestType.equals(RequestType.CANCEL.toString())) {
@@ -57,19 +65,25 @@ public class JavaWorker {
 		
 	}
 	
-	private JavaWorker(String uuid) {
+	private JavaWorker(String uuid, Tensorflow2Interface ti) {
 		this.uuid = uuid;
+		this.ti = ti;
 	}
 	
-	private void executeScript(String script, Map<String, Object> inputs) {
-		Map<String, Object> binding = new HashMap<String, Object>();
+	private void executeScript(String script, LinkedHashMap<String, Object> inputs) {
+		LinkedHashMap<String, Object> binding = new LinkedHashMap<String, Object>();
 		binding.put("task", this);
 		if (inputs != null)
 			binding.putAll(binding);
 		
 		this.reportLaunch();
 		try {
-			// TODO find a way to launch the code in the separate process
+			if (script.equals("loadModel"))
+				ti.loadModel((String) inputs.get("modelFolder"), null);
+			else if (script.equals("inference"))
+				ti.run(null, null);
+			else if (script.equals("close"))
+				ti.closeModel();
 		} catch(Exception ex) {
 			this.fail(Types.stackTrace(ex.getCause()));
 			return;
@@ -77,7 +91,7 @@ public class JavaWorker {
 		this.reportCompletion();
 	}
 	
-	private void start(String script, Map<String, Object> inputs) {
+	private void start(String script, LinkedHashMap<String, Object> inputs) {
 		new Thread(() -> executeScript(script, inputs), "Appose-" + this.uuid).start();
 	}
 	
@@ -90,7 +104,7 @@ public class JavaWorker {
 	}
 	
 	private void update(String message, Integer current, Integer maximum) {
-		Map<String, Object> args = new HashMap<String, Object>();
+		LinkedHashMap<String, Object> args = new LinkedHashMap<String, Object>();
 		
 		if (message != null)
 			args.put("message", message);
@@ -103,8 +117,8 @@ public class JavaWorker {
 		this.respond(ResponseType.UPDATE, args);
 	}
 	
-	private void respond(ResponseType responseType, Map<String, Object> args) {
-		Map<String, Object> response = new HashMap<String, Object>();
+	private void respond(ResponseType responseType, LinkedHashMap<String, Object> args) {
+		LinkedHashMap<String, Object> response = new LinkedHashMap<String, Object>();
 		response.put("task", uuid);
 		response.put("responseType", responseType);
 		if (args != null)
@@ -122,9 +136,9 @@ public class JavaWorker {
 	}
 	
 	private void fail(String error) {
-		Map<String, Object> args = null;
+		LinkedHashMap<String, Object> args = null;
 		if (error != null) {
-			args = new HashMap<String, Object>();
+			args = new LinkedHashMap<String, Object>();
 			args.put("error", error);
 		}
         respond(ResponseType.FAILURE, args);

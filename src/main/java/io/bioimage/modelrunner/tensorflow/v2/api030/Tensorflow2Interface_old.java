@@ -20,13 +20,8 @@
  */
 package io.bioimage.modelrunner.tensorflow.v2.api030;
 
-import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import io.bioimage.modelrunner.apposed.appose.Service;
-import io.bioimage.modelrunner.apposed.appose.Service.Task;
-import io.bioimage.modelrunner.apposed.appose.Service.TaskStatus;
-import io.bioimage.modelrunner.apposed.appose.Types;
 import io.bioimage.modelrunner.bioimageio.description.ModelDescriptor;
 import io.bioimage.modelrunner.bioimageio.download.DownloadModel;
 import io.bioimage.modelrunner.engine.DeepLearningEngineInterface;
@@ -35,25 +30,35 @@ import io.bioimage.modelrunner.exceptions.LoadModelException;
 import io.bioimage.modelrunner.exceptions.RunModelException;
 import io.bioimage.modelrunner.system.PlatformDetection;
 import io.bioimage.modelrunner.tensor.Tensor;
-import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.tensorflow.v2.api030.tensor.ImgLib2Builder;
 import io.bioimage.modelrunner.tensorflow.v2.api030.tensor.TensorBuilder;
-import io.bioimage.modelrunner.utils.CommonUtils;
+import io.bioimage.modelrunner.tensorflow.v2.api030.tensor.mappedbuffer.ImgLib2ToMappedBuffer;
+import io.bioimage.modelrunner.tensorflow.v2.api030.tensor.mappedbuffer.MappedBufferToImgLib2;
 import io.bioimage.modelrunner.utils.Constants;
 import io.bioimage.modelrunner.utils.ZipUtils;
 import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.ProtectionDomain;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -82,7 +87,7 @@ import org.tensorflow.types.family.TType;
  * 
  * @author Carlos Garcia Lopez de Haro and Daniel Felipe Gonzalez Obando
  */
-public class Tensorflow2Interface implements DeepLearningEngineInterface {
+public class Tensorflow2Interface_old implements DeepLearningEngineInterface {
 
 	private static final String[] MODEL_TAGS = { "serve", "inference", "train",
 		"eval", "gpu", "tpu" };
@@ -116,22 +121,32 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		"tf.saved_model.signature_constants.DEFAULT_EVAL_SIGNATURE_DEF_KEY",
 		"tf.saved_model.signature_constants.SUPERVISED_TRAIN_METHOD_NAME",
 		"tf.saved_model.signature_constants.SUPERVISED_EVAL_METHOD_NAME" };
+    
+    /**
+     * Idetifier for the files that contain the data of the inputs
+     */
+    final private static String INPUT_FILE_TERMINATION = "_model_input";
+    
+    /**
+     * Idetifier for the files that contain the data of the outputs
+     */
+    final private static String OUTPUT_FILE_TERMINATION = "_model_output";
+    /**
+     * Key for the inputs in the map that retrieves the file names for interprocess communication
+     */
+    final private static String INPUTS_MAP_KEY = "inputs";
+    /**
+     * Key for the outputs in the map that retrieves the file names for interprocess communication
+     */
+    final private static String OUTPUTS_MAP_KEY = "outputs";
+    /**
+     * File extension for the temporal files used for interprocessing
+     */
+    final private static String FILE_EXTENSION = ".dat";
 	/**
 	 * Name without vesion of the JAR created for this library
 	 */
 	private static final String JAR_FILE_NAME = "dl-modelrunner-tensorflow-";
-
-	private static final String NAME_KEY = "name";
-	private static final String SHAPE_KEY = "shape";
-	private static final String DTYPE_KEY = "dtype";
-	private static final String IS_INPUT_KEY = "isInput";
-	private static final String MEM_NAME_KEY = "memoryName";
-	
-	private List<SharedMemoryArray> shmaInputList = new ArrayList<SharedMemoryArray>();
-	
-	private List<SharedMemoryArray> shmaOutputList = new ArrayList<SharedMemoryArray>();
-	
-	private List<String> shmaNamesList = new ArrayList<String>();
 
     /**
      * The loaded Tensorflow 2 model
@@ -146,33 +161,63 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 */
 	private boolean interprocessing = false;
     /**
+     * TEmporary dir where to store temporary files
+     */
+    private String tmpDir;
+    /**
      * Folde containing the model that is being executed
      */
     private String modelFolder;
     /**
+     * List of temporary files used for interprocessing communication
+     */
+    private List<File> listTempFiles;
+    /**
+     * HashMap that maps tensor to the temporal file name for interprocessing
+     */
+    private HashMap<String, String> tensorFilenameMap;
+    /**
      * Process where the model is being loaded and executed
      */
-    Service runner;
+    Process process;
+    
+    /**
+     * TODO the interprocessing is executed for every OS
+     * Constructor that detects whether the operating system where it is being 
+     * executed is Windows or Mac or not to know if it is going to need interprocessing 
+     * or not
+     * @throws IOException if the temporary dir is not found
+     */
+    public Tensorflow2Interface_old() throws IOException
+    {
+    	boolean isWin = PlatformDetection.isWindows();
+    	boolean isIntel = PlatformDetection.getArch().equals(PlatformDetection.ARCH_X86_64);
+    	if (true || (isWin && isIntel)) {
+    		interprocessing = true;
+    		tmpDir = getTemporaryDir();
+    	}
+    }
 	
-    public Tensorflow2Interface(boolean doInterprocessing) throws IOException, URISyntaxException
+    /**
+     * Private constructor that can only be launched from the class to create a separate
+     * process to avoid the conflicts that occur in the same process between TF2 and TF1/Pytorch
+     * in Windows and Mac
+     * @param doInterprocessing
+     * 	whether to do interprocessing or not
+     * @throws IOException if the temp dir is not found
+     */
+    private Tensorflow2Interface_old(boolean doInterprocessing) throws IOException
     {
-		interprocessing = doInterprocessing;
-		if (this.interprocessing) {
-			runner = getRunner();
-		}
-    }
-    
-    public Tensorflow2Interface() throws IOException, URISyntaxException
-    {
-		this(true);
-    }
-    
-    private Service getRunner() throws IOException, URISyntaxException {
-		List<String> args = getProcessCommandsWithoutArgs();
-		String[] argArr = new String[args.size()];
-		args.toArray(argArr);
-
-		return new Service(new File(argArr[0]), argArr);
+    	if (!doInterprocessing) {
+    		interprocessing = false;
+    	} else {
+    		boolean isMac = PlatformDetection.isMacOS();
+        	boolean isIntel = PlatformDetection.getArch().equals(PlatformDetection.ARCH_X86_64);
+        	if (isMac && isIntel) {
+        		interprocessing = true;
+        		tmpDir = getTemporaryDir();        		
+        	}
+    	}
     }
 
     /**
@@ -188,14 +233,8 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		throws LoadModelException
 	{
 		this.modelFolder = modelFolder;
-		if (interprocessing) {
-			try {
-				launchModelLoadOnProcess();
-			} catch (IOException | InterruptedException e) {
-				throw new LoadModelException(Types.stackTrace(e));
-			}
+		if (interprocessing) 
 			return;
-		}
 		try {
 			checkModelUnzipped();
 		} catch (Exception e) {
@@ -210,19 +249,6 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		catch (InvalidProtocolBufferException e) {
 			System.out.println("Invalid graph");
 		}
-	}
-	
-	private void launchModelLoadOnProcess() throws IOException, InterruptedException {
-		HashMap<String, Object> args = new HashMap<String, Object>();
-		args.put("mdoelFolder", modelFolder);
-		Task task = runner.task("loadModel", args);
-		task.waitFor();
-		if (task.status == TaskStatus.CANCELED)
-			throw new RuntimeException();
-		else if (task.status == TaskStatus.FAILED)
-			throw new RuntimeException();
-		else if (task.status == TaskStatus.CRASHED)
-			throw new RuntimeException();
 	}
 	
 	/**
@@ -316,85 +342,31 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 * @throws RunModelException if there is any issue running the model
 	 */
 	public void runInterprocessing(List<Tensor<?>> inputTensors, List<Tensor<?>> outputTensors) throws RunModelException {
-		shmaInputList = new ArrayList<SharedMemoryArray>();
-		shmaOutputList = new ArrayList<SharedMemoryArray>();
-		LinkedHashMap<String, String> encIns = encodeInputs(inputTensors);
-		modifyForWinCmd(encIns);
-		LinkedHashMap<String, String> encOuts = encodeOutputs(outputTensors);
-		modifyForWinCmd(encOuts);
+		createTensorsForInterprocessing(inputTensors);
+		createTensorsForInterprocessing(outputTensors);
 		try {
+			List<String> args = getProcessCommandsWithoutArgs();
+			for (Tensor tensor : inputTensors) {args.add(getFilename4Tensor(tensor.getName()) + INPUT_FILE_TERMINATION);}
+			for (Tensor tensor : outputTensors) {args.add(getFilename4Tensor(tensor.getName()) + OUTPUT_FILE_TERMINATION);}
+			ProcessBuilder builder = new ProcessBuilder(args);
+			builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+			builder.redirectError(ProcessBuilder.Redirect.INHERIT);
+	        process = builder.start();
+	        int result = process.waitFor();
+	        process.destroy();
+	        if (result != 0)
+	    		throw new RunModelException("Error executing the Tensorflow 2 model in"
+	        			+ " a separate process. The process was not terminated correctly."
+	        			+ System.lineSeparator() + readProcessStringOutput(process));
+		} catch (RunModelException e) {
+			closeModel();
+			throw e;
 		} catch (Exception e) {
-			closeShmas();
-			throw new RunModelException(Types.stackTrace(e));
+			closeModel();
+			throw new RunModelException(e.toString());
 		}
-		closeShmas();
-	}
-	
-	private void closeShmas() {
-		shmaInputList.forEach(shm -> {
-			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
-		});
-		shmaInputList = null;
-		shmaOutputList.forEach(shm -> {
-			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
-		});
-		shmaOutputList = null;
-	}
-	
-	private static void modifyForWinCmd(LinkedHashMap<String, String> ins){
-		if (!PlatformDetection.isWindows())
-			return;
-		ins.entrySet().forEach(ee ->{
-			String val = ee.getValue();
-			String nVal = "\"" + val.replace("\"", "\\\"") + "\"";
-			ee.setValue(nVal);
-		});
-	}
-	
-	
-	private LinkedHashMap<String, String> encodeInputs(List<Tensor<?>> inputTensors) {
-		LinkedHashMap<String, String> encodedInputTensors = new LinkedHashMap<String, String>();
-		Gson gson = new Gson();
-		for (Tensor<?> tt : inputTensors) {
-			SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), false, true);
-			shmaInputList.add(shma);
-			HashMap<String, Object> map = new HashMap<String, Object>();
-			map.put(NAME_KEY, tt.getName());
-			map.put(SHAPE_KEY, tt.getShape());
-			map.put(DTYPE_KEY, CommonUtils.getDataTypeFromRAI(tt.getData()));
-			map.put(IS_INPUT_KEY, true);
-			map.put(MEM_NAME_KEY, shma.getName());
-			encodedInputTensors.put(tt.getName(), gson.toJson(map));
-		}
-		return encodedInputTensors;
-	}
-	
-	
-	private LinkedHashMap<String, String> encodeOutputs(List<Tensor<?>> outputTensors) {
-		Gson gson = new Gson();
-		LinkedHashMap<String, String>encodedOutputTensors = new LinkedHashMap<String, String>();
-		for (Tensor<?> tt : outputTensors) {
-			HashMap<String, Object> map = new HashMap<String, Object>();
-			map.put(NAME_KEY, tt.getName());
-			map.put(IS_INPUT_KEY, false);
-			if (!tt.isEmpty()) {
-				map.put(SHAPE_KEY, tt.getShape());
-				map.put(DTYPE_KEY, CommonUtils.getDataTypeFromRAI(tt.getData()));
-				SharedMemoryArray shma = SharedMemoryArray.createSHMAFromRAI(tt.getData(), false, true);
-				shmaOutputList.add(shma);
-				map.put(MEM_NAME_KEY, shma.getName());
-			} else if (PlatformDetection.isWindows()){
-				SharedMemoryArray shma = SharedMemoryArray.create(0);
-				shmaOutputList.add(shma);
-				map.put(MEM_NAME_KEY, shma.getName());
-			} else {
-				String memName = SharedMemoryArray.createShmName();
-				map.put(MEM_NAME_KEY, memName);
-				shmaNamesList.add(memName);
-			}
-			encodedOutputTensors.put(tt.getName(), gson.toJson(map));
-		}
-		return encodedOutputTensors;
+		
+		retrieveInterprocessingTensors(outputTensors);
 	}
 
 	/**
@@ -427,18 +399,21 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 */
 	@Override
 	public void closeModel() {
-		if (this.interprocessing && runner != null) {
-			this.runner.close();
-			return;
-		} else if (this.interprocessing) {
-			return;
-		}
 		sig = null;
 		if (model != null) {
 			model.session().close();
 			model.close();
 		}
 		model = null;
+		if (listTempFiles == null)
+			return;
+		for (File ff : listTempFiles) {
+			if (ff.exists())
+				ff.delete();
+		}
+		listTempFiles = null;
+		if (process != null)
+			process.destroyForcibly();
 	}
 
 	// TODO make only one
@@ -524,7 +499,154 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
      * @throws RunModelException	if there is any error running the model
      */
     public static void main(String[] args) throws LoadModelException, IOException, RunModelException {
+    	// Unpack the args needed
+    	if (args.length < 4)
+    		throw new IllegalArgumentException("Error exectuting Tensorflow 2, "
+    				+ "at least 5 arguments are required:" + System.lineSeparator()
+    				+ " - Folder where the model is located" + System.lineSeparator()
+    				+ " - Temporary dir where the memory mapped files are located" + System.lineSeparator()
+    				+ " - Name of the model input followed by the String + '_model_input'" + System.lineSeparator()
+    				+ " - Name of the second model input (if it exists) followed by the String + '_model_input'" + System.lineSeparator()
+    				+ " - ...." + System.lineSeparator()
+    				+ " - Name of the nth model input (if it exists)  followed by the String + '_model_input'" + System.lineSeparator()
+    				+ " - Name of the model output followed by the String + '_model_output'" + System.lineSeparator()
+    				+ " - Name of the second model output (if it exists) followed by the String + '_model_output'" + System.lineSeparator()
+    				+ " - ...." + System.lineSeparator()
+    				+ " - Name of the nth model output (if it exists)  followed by the String + '_model_output'" + System.lineSeparator()
+    				);
+    	String modelFolder = args[0];
+    	if (!(new File(modelFolder).isDirectory())) {
+    		throw new IllegalArgumentException("Argument 0 of the main method, '" + modelFolder + "' "
+    				+ "should be an existing directory containing a Tensorflow 2 model.");
+    	}
+    	
+    	Tensorflow2Interface_old tfInterface = new Tensorflow2Interface_old(false);
+    	tfInterface.tmpDir = args[1];
+    	if (!(new File(args[1]).isDirectory())) {
+    		throw new IllegalArgumentException("Argument 1 of the main method, '" + args[1] + "' "
+    				+ "should be an existing directory.");
+    	}
+    	
+    	tfInterface.loadModel(modelFolder, modelFolder);
+    	
+    	HashMap<String, List<String>> map = tfInterface.getInputTensorsFileNames(args);
+    	List<String> inputNames = map.get(INPUTS_MAP_KEY);
+    	List<Tensor<?>> inputList = inputNames.stream().map(n -> {
+									try {
+										return tfInterface.retrieveInterprocessingTensorsByName(n);
+									} catch (RunModelException e) {
+										return null;
+									}
+								}).collect(Collectors.toList());
+    	List<String> outputNames = map.get(OUTPUTS_MAP_KEY);
+    	List<Tensor<?>> outputList = outputNames.stream().map(n -> {
+									try {
+										return tfInterface.retrieveInterprocessingTensorsByName(n);
+									} catch (RunModelException e) {
+										return null;
+									}
+								}).collect(Collectors.toList());
+    	tfInterface.run(inputList, outputList);
+    	tfInterface.createTensorsForInterprocessing(outputList);
     }
+    
+    /**
+     * Get the name of the temporary file associated to the tensor name
+     * @param name
+     * 	name of the tensor
+     * @return file name associated to the tensor
+     */
+    private String getFilename4Tensor(String name) {
+    	if (tensorFilenameMap == null)
+    		tensorFilenameMap = new HashMap<String, String>();
+    	if (tensorFilenameMap.get(name) != null) {
+    		return tensorFilenameMap.get(name);
+    	}
+    	LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+    	String newName = name + "_" +  now.format(formatter);
+    	tensorFilenameMap.put(name, newName);
+		return tensorFilenameMap.get(name);
+    }
+	
+    /**
+     * Create a temporary file for each of the tensors in the list to communicate with 
+     * the separate process in MacOS Intel and Windows systems
+     * @param tensors
+     * 	list of tensors to be sent
+     * @throws RunModelException if there is any error converting the tensors
+     */
+	private void createTensorsForInterprocessing(List<Tensor<?>> tensors) throws RunModelException{
+		if (this.listTempFiles == null)
+			this.listTempFiles = new ArrayList<File>();
+		for (Tensor<?> tensor : tensors) {
+			long lenFile = ImgLib2ToMappedBuffer.findTotalLengthFile(tensor);
+			File ff = new File(tmpDir + File.separator + getFilename4Tensor(tensor.getName()) + FILE_EXTENSION);
+			if (!ff.exists()) {
+				ff.deleteOnExit();
+				this.listTempFiles.add(ff);
+			}
+			try (RandomAccessFile rd = 
+    				new RandomAccessFile(ff, "rw");
+    				FileChannel fc = rd.getChannel();) {
+    			MappedByteBuffer mem = fc.map(FileChannel.MapMode.READ_WRITE, 0, lenFile);
+    			ByteBuffer byteBuffer = mem.duplicate();
+    			ImgLib2ToMappedBuffer.build(tensor, byteBuffer);
+    		} catch (IOException e) {
+    			closeModel();
+    			throw new RunModelException(e.getCause().toString());
+			}
+		}
+	}
+	
+	/**
+	 * Retrieves the data of the tensors contained in the input list from the output
+	 * generated by the independent process
+	 * @param tensors
+	 * 	list of tensors that are going to be filled
+	 * @throws RunModelException if there is any issue retrieving the data from the other process
+	 */
+	private void retrieveInterprocessingTensors(List<Tensor<?>> tensors) throws RunModelException{
+		for (Tensor<?> tensor : tensors) {
+			try (RandomAccessFile rd = 
+    				new RandomAccessFile(tmpDir + File.separator 
+    						+ this.getFilename4Tensor(tensor.getName()) + FILE_EXTENSION, "r");
+    				FileChannel fc = rd.getChannel();) {
+    			MappedByteBuffer mem = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+    			ByteBuffer byteBuffer = mem.duplicate();
+    			tensor.setData(MappedBufferToImgLib2.build(byteBuffer));
+    		} catch (IOException e) {
+    			closeModel();
+    			throw new RunModelException(e.getCause().toString());
+			}
+		}
+	}
+	
+	/**
+	 * Create a tensor from the data contained in a file named as the parameter
+	 * provided as an input + the file extension {@link #FILE_EXTENSION}.
+	 * This file is produced by another process to communicate with the current process
+	 * @param <T>
+	 * 	generic type of the tensor
+	 * @param name
+	 * 	name of the file without the extension ({@link #FILE_EXTENSION}).
+	 * @return a tensor created with the data in the file
+	 * @throws RunModelException if there is any problem retrieving the data and cerating the tensor
+	 */
+	private < T extends RealType< T > & NativeType< T > > Tensor<T> 
+				retrieveInterprocessingTensorsByName(String name) throws RunModelException {
+		try (RandomAccessFile rd = 
+				new RandomAccessFile(tmpDir + File.separator 
+						+ this.getFilename4Tensor(name) + FILE_EXTENSION, "r");
+				FileChannel fc = rd.getChannel();) {
+			MappedByteBuffer mem = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+			ByteBuffer byteBuffer = mem.duplicate();
+			return MappedBufferToImgLib2.buildTensor(byteBuffer);
+		} catch (IOException e) {
+			closeModel();
+			throw new RunModelException(e.toString());
+		}
+	}
 	
 	/**
 	 * if java bin dir contains any special char, surround it by double quotes
@@ -559,7 +681,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
         		&& !modelrunnerPath.contains(File.pathSeparator)))
         	modelrunnerPath = System.getProperty("java.class.path");
         String classpath =  modelrunnerPath + File.pathSeparator + imglib2Path + File.pathSeparator;
-        ProtectionDomain protectionDomain = Tensorflow2Interface.class.getProtectionDomain();
+        ProtectionDomain protectionDomain = Tensorflow2Interface_old.class.getProtectionDomain();
         String codeSource = protectionDomain.getCodeSource().getLocation().getPath();
         String f_name = URLDecoder.decode(codeSource, StandardCharsets.UTF_8.toString());
         f_name = new File(f_name).getAbsolutePath();
@@ -568,12 +690,14 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
         		continue;
         	classpath += ff.getAbsolutePath() + File.pathSeparator;
         }
-        String className = Tensorflow2Interface.class.getName();
+        String className = Tensorflow2Interface_old.class.getName();
         List<String> command = new LinkedList<String>();
         command.add(padSpecialJavaBin(javaBin));
         command.add("-cp");
         command.add(classpath);
         command.add(className);
+        command.add(modelFolder);
+        command.add(this.tmpDir);
         return command;
 	}
 	
@@ -608,16 +732,52 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	}
 	
 	/**
+	 * Get temporary directory to perform the interprocessing communication in MacOSX
+	 * intel and Windows
+	 * @return the tmp dir
+	 * @throws IOException if the files cannot be written in any of the temp dirs
+	 */
+	private static String getTemporaryDir() throws IOException {
+		String tmpDir;
+
+		String enginesDir = getEnginesDir();
+		if (enginesDir != null && Files.isWritable(Paths.get(enginesDir))) {
+			tmpDir = enginesDir + File.separator + "temp";
+			if (!(new File(tmpDir).isDirectory()) &&  !(new File(tmpDir).mkdirs()))
+				tmpDir = enginesDir;
+		} else if (System.getenv("temp") != null
+			&& Files.isWritable(Paths.get(System.getenv("temp")))) {
+			return System.getenv("temp");
+		} else if (System.getenv("TEMP") != null
+			&& Files.isWritable(Paths.get(System.getenv("TEMP")))) {
+			return System.getenv("TEMP");
+		} else if (System.getenv("tmp") != null
+			&& Files.isWritable(Paths.get(System.getenv("tmp")))) {
+			return System.getenv("tmp");
+		} else if (System.getenv("TMP") != null
+			&& Files.isWritable(Paths.get(System.getenv("TMP")))) {
+			return System.getenv("TMP");
+		} else if (System.getProperty("java.io.tmpdir") != null 
+				&& Files.isWritable(Paths.get(System.getProperty("java.io.tmpdir")))) {
+			return System.getProperty("java.io.tmpdir");
+		} else {
+			throw new IOException("Unable to find temporal directory with writting rights. "
+					+ "Please either allow writting on the system temporal folder or on '" + enginesDir + "'.");
+		}
+		return tmpDir;
+	}
+	
+	/**
 	 * GEt the directory where the TF2 engine is located if a temporary dir is not found
 	 * @return directory of the engines
 	 */
 	private static String getEnginesDir() {
 		String dir;
 		try {
-			dir = getPathFromClass(Tensorflow2Interface.class);
+			dir = getPathFromClass(Tensorflow2Interface_old.class);
 		} catch (UnsupportedEncodingException e) {
-			String classResource = Tensorflow2Interface.class.getName().replace('.', '/') + ".class";
-		    URL resourceUrl = Tensorflow2Interface.class.getClassLoader().getResource(classResource);
+			String classResource = Tensorflow2Interface_old.class.getName().replace('.', '/') + ".class";
+		    URL resourceUrl = Tensorflow2Interface_old.class.getClassLoader().getResource(classResource);
 		    if (resourceUrl == null) {
 		        return null;
 		    }
@@ -638,4 +798,64 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		}
 		return new File(dir).getParent();
 	}
+    
+    /**
+     * Retrieve the file names used for interprocess communication
+     * @param args
+     * 	args provided to the main method
+     * @return a map with a list of input and output names
+     */
+    private HashMap<String, List<String>> getInputTensorsFileNames(String[] args) {
+    	List<String> inputNames = new ArrayList<String>();
+    	List<String> outputNames = new ArrayList<String>();
+    	if (this.tensorFilenameMap == null)
+    		this.tensorFilenameMap = new HashMap<String, String>();
+    	for (int i = 2; i < args.length; i ++) {
+    		if (args[i].endsWith(INPUT_FILE_TERMINATION)) {
+    			String nameWTimestamp = args[i].substring(0, args[i].length() - INPUT_FILE_TERMINATION.length());
+    			String onlyName = nameWTimestamp.substring(0, nameWTimestamp.lastIndexOf("_"));
+    			inputNames.add(onlyName);
+    			tensorFilenameMap.put(onlyName, nameWTimestamp);
+    		} else if (args[i].endsWith(OUTPUT_FILE_TERMINATION)) {
+    			String nameWTimestamp = args[i].substring(0, args[i].length() - OUTPUT_FILE_TERMINATION.length());
+    			String onlyName = nameWTimestamp.substring(0, nameWTimestamp.lastIndexOf("_"));
+    			outputNames.add(onlyName);
+    			tensorFilenameMap.put(onlyName, nameWTimestamp);
+    	
+    		}
+    	}
+    	if (inputNames.size() == 0)
+    		throw new IllegalArgumentException("The args to the main method of '" 
+    						+ Tensorflow2Interface_old.class.toString() + "' should contain at "
+    						+ "least one input, defined as '<input_name> + '" + INPUT_FILE_TERMINATION + "'.");
+    	if (outputNames.size() == 0)
+    		throw new IllegalArgumentException("The args to the main method of '" 
+					+ Tensorflow2Interface_old.class.toString() + "' should contain at "
+					+ "least one output, defined as '<output_name> + '" + OUTPUT_FILE_TERMINATION + "'.");
+    	HashMap<String, List<String>> map = new HashMap<String, List<String>>();
+    	map.put(INPUTS_MAP_KEY, inputNames);
+    	map.put(OUTPUTS_MAP_KEY, outputNames);
+    	return map;
+    }
+    
+    /**
+     * MEthod to obtain the String output of the process in case something goes wrong
+     * @param process
+     * 	the process that executed the TF2 model
+     * @return the String output that we would have seen on the terminal
+     * @throws IOException if the output of the terminal cannot be seen
+     */
+    private static String readProcessStringOutput(Process process) throws IOException {
+    	BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader bufferedErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		String text = "";
+		String line;
+	    while ((line = bufferedErrReader.readLine()) != null) {
+	    	text += line + System.lineSeparator();
+	    }
+	    while ((line = bufferedReader.readLine()) != null) {
+	    	text += line + System.lineSeparator();
+	    }
+	    return text;
+    }
 }

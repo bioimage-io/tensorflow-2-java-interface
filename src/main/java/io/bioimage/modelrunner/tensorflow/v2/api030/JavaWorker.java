@@ -2,13 +2,13 @@ package io.bioimage.modelrunner.tensorflow.v2.api030;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import io.bioimage.modelrunner.apposed.appose.Types;
-import io.bioimage.modelrunner.tensor.Tensor;
 import io.bioimage.modelrunner.apposed.appose.Service.RequestType;
 import io.bioimage.modelrunner.apposed.appose.Service.ResponseType;
 
@@ -48,7 +48,7 @@ public class JavaWorker {
                 
                 if (requestType.equals(RequestType.EXECUTE.toString())) {
                 	String script = (String) request.get("script");
-                	LinkedHashMap<String, Object> inputs = (LinkedHashMap<String, Object>) request.get("inputs");
+                	Map<String, Object> inputs = (Map<String, Object>) request.get("inputs");
                 	JavaWorker task = new JavaWorker(uuid, ti);
                 	tasks.put(uuid, task);
                 	task.start(script, inputs);
@@ -72,8 +72,8 @@ public class JavaWorker {
 		this.ti = ti;
 	}
 	
-	private void executeScript(String script, LinkedHashMap<String, Object> inputs) {
-		LinkedHashMap<String, Object> binding = new LinkedHashMap<String, Object>();
+	private void executeScript(String script, Map<String, Object> inputs) {
+		Map<String, Object> binding = new LinkedHashMap<String, Object>();
 		binding.put("task", this);
 		if (inputs != null)
 			binding.putAll(binding);
@@ -81,20 +81,21 @@ public class JavaWorker {
 		this.reportLaunch();
 		try {
 			if (script.equals("loadModel")) {
+				System.out.println((String) inputs.get("modelFolder"));
 				ti.loadModel((String) inputs.get("modelFolder"), null);
 			} else if (script.equals("inference")) {
-				ti.runFromShmas((LinkedHashMap<String, Object>) inputs.get("inputs"), (LinkedHashMap<String, Object>) inputs.get("outputs"));
+				ti.runFromShmas((List<String>) inputs.get("inputs"), (List<String>) inputs.get("outputs"));
 			} else if (script.equals("close")) {
 				ti.closeModel();
 			}
 		} catch(Exception ex) {
-			this.fail(Types.stackTrace(ex.getCause()));
+			this.fail(Types.stackTrace(ex));
 			return;
 		}
 		this.reportCompletion();
 	}
 	
-	private void start(String script, LinkedHashMap<String, Object> inputs) {
+	private void start(String script, Map<String, Object> inputs) {
 		new Thread(() -> executeScript(script, inputs), "Appose-" + this.uuid).start();
 	}
 	
@@ -120,12 +121,12 @@ public class JavaWorker {
 		this.respond(ResponseType.UPDATE, args);
 	}
 	
-	private void respond(ResponseType responseType, LinkedHashMap<String, Object> args) {
-		LinkedHashMap<String, Object> response = new LinkedHashMap<String, Object>();
+	private void respond(ResponseType responseType, Map<String, Object> args) {
+		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("task", uuid);
 		response.put("responseType", responseType);
 		if (args != null)
-			response.putAll(response);
+			response.putAll(args);
 		try {
 			System.out.println(Types.encode(response));
 			System.out.flush();
@@ -139,9 +140,10 @@ public class JavaWorker {
 	}
 	
 	private void fail(String error) {
-		LinkedHashMap<String, Object> args = null;
+		System.out.println(error);
+		Map<String, Object> args = null;
 		if (error != null) {
-			args = new LinkedHashMap<String, Object>();
+			args = new HashMap<String, Object>();
 			args.put("error", error);
 		}
         respond(ResponseType.FAILURE, args);

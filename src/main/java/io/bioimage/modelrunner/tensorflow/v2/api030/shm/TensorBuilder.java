@@ -33,7 +33,10 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Cast;
 
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 import java.util.Arrays;
 
 import org.tensorflow.Tensor;
@@ -145,7 +148,10 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		IntDataBuffer dataBuffer = RawDataBufferFactory.create(buff.array(), false).asInts();
+		IntBuffer intBuff = buff.asIntBuffer();
+		int[] intArray = new int[intBuff.capacity()];
+		intBuff.get(intArray);
+		IntDataBuffer dataBuffer = RawDataBufferFactory.create(intArray, false);
 		TInt32 ndarray = TInt32.tensorOf(Shape.of(ogShape),
 			dataBuffer);
 		return ndarray;
@@ -171,7 +177,10 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		LongDataBuffer dataBuffer = RawDataBufferFactory.create(buff.array(), false).asLongs();
+		LongBuffer longBuff = buff.asLongBuffer();
+		long[] longArray = new long[longBuff.capacity()];
+		longBuff.get(longArray);
+		LongDataBuffer dataBuffer = RawDataBufferFactory.create(longArray, false);
 		TInt64 ndarray = TInt64.tensorOf(Shape.of(ogShape),
 			dataBuffer);
 		return ndarray;
@@ -225,7 +234,10 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(buff.array(), false).asDoubles();
+		DoubleBuffer doubleBuff = buff.asDoubleBuffer();
+		double[] doubleArray = new double[doubleBuff.capacity()];
+		doubleBuff.get(doubleArray);
+		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(doubleArray, false);
 		TFloat64 ndarray = TFloat64.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;
 	}

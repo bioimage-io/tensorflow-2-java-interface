@@ -231,9 +231,17 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 			String source = descriptor.getWeights().gettAllSupportedWeightObjects().stream()
 					.filter(ww -> ww.getFramework().equals(EngineInfo.getBioimageioTfKey()))
 					.findFirst().get().getSource();
-			source = DownloadModel.getFileNameFromURLString(source);
-			System.out.println("Unzipping model...");
-			ZipUtils.unzipFolder(modelFolder + File.separator + source, modelFolder);
+			if (new File(source).isFile()) {
+				System.out.println("Unzipping model...");
+				ZipUtils.unzipFolder(new File(source).getAbsolutePath(), modelFolder);
+			} else if (new File(modelFolder, source).isFile()) {
+				System.out.println("Unzipping model...");
+				ZipUtils.unzipFolder(new File(modelFolder, source).getAbsolutePath(), modelFolder);
+			} else {
+				source = DownloadModel.getFileNameFromURLString(source);
+				System.out.println("Unzipping model...");
+				ZipUtils.unzipFolder(modelFolder + File.separator + source, modelFolder);
+			}
 		} else {
 			throw new LoadModelException("No model file was found in the model folder");
 		}
@@ -258,7 +266,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		List<String> inputListNames = new ArrayList<String>();
 		List<TType> inTensors = new ArrayList<TType>();
 		int c = 0;
-		for (Tensor<?> tt : inputTensors) {
+		for (Tensor<T> tt : inputTensors) {
 			inputListNames.add(tt.getName());
 			TType inT = TensorBuilder.build(tt);
 			inTensors.add(inT);
@@ -266,7 +274,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 			runner.feed(inputName, inT);
 		}
 		c = 0;
-		for (Tensor<?> tt : outputTensors)
+		for (Tensor<R> tt : outputTensors)
 			runner = runner.fetch(getModelOutputName(tt.getName(), c ++));
 		// Run runner
 		List<org.tensorflow.Tensor> resultPatchTensors = runner.run();

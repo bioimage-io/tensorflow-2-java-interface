@@ -23,13 +23,6 @@ package io.bioimage.modelrunner.tensorflow.v2.api030.shm;
 
 import io.bioimage.modelrunner.tensor.shm.SharedMemoryArray;
 import io.bioimage.modelrunner.utils.CommonUtils;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.type.numeric.integer.LongType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Cast;
 
 import java.nio.ByteBuffer;
@@ -55,10 +48,9 @@ import org.tensorflow.types.TUint8;
 import org.tensorflow.types.family.TType;
 
 /**
- * A TensorFlow 2 {@link Tensor} builder from {@link Img} and
- * {@link io.bioimage.modelrunner.tensor.Tensor} objects.
+ * Utility class to build Pytorch Bytedeco tensors from shm segments using {@link SharedMemoryArray}
  * 
- * @author Carlos Garcia Lopez de Haro and Daniel Felipe Gonzalez Obando
+ * @author Carlos Garcia Lopez de Haro
  */
 public final class TensorBuilder {
 
@@ -68,21 +60,17 @@ public final class TensorBuilder {
 	private TensorBuilder() {}
 
 	/**
-	 * Creates {@link TType} instance with the same size and information as the
-	 * given {@link RandomAccessibleInterval}.
+	 * Creates {@link TType} instance from a {@link SharedMemoryArray}
 	 * 
-	 * @param <T>
-	 * 	the ImgLib2 data types the {@link RandomAccessibleInterval} can be
 	 * @param array
-	 * 	the {@link RandomAccessibleInterval} that is going to be converted into
+	 * 	the {@link SharedMemoryArray} that is going to be converted into
 	 *  a {@link TType} tensor
-	 * @return a {@link TType} tensor
-	 * @throws IllegalArgumentException if the type of the {@link RandomAccessibleInterval}
+	 * @return the Pytorch {@link TType} as the one stored in the shared memory segment
+	 * @throws IllegalArgumentException if the type of the {@link SharedMemoryArray}
 	 *  is not supported
 	 */
 	public static TType build(SharedMemoryArray array) throws IllegalArgumentException
 	{
-		// Create an Icy sequence of the same type of the tensor
 		if (array.getOriginalDataType().equals("uint8")) {
 			return buildUByte(Cast.unchecked(array));
 		}
@@ -103,17 +91,7 @@ public final class TensorBuilder {
 		}
 	}
 
-	/**
-	 * Creates a {@link TType} tensor of type {@link TUint8} from an
-	 * {@link RandomAccessibleInterval} of type {@link UnsignedByteType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TType} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
-	public static TUint8 buildUByte(SharedMemoryArray tensor)
+	private static TUint8 buildUByte(SharedMemoryArray tensor)
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.getOriginalShape();
@@ -128,17 +106,7 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TInt32} tensor of type {@link TInt32} from an
-	 * {@link RandomAccessibleInterval} of type {@link IntType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TInt32} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
-	public static TInt32 buildInt(SharedMemoryArray tensor)
+	private static TInt32 buildInt(SharedMemoryArray tensor)
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.getOriginalShape();
@@ -157,16 +125,6 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TInt64} tensor of type {@link TInt64} from an
-	 * {@link RandomAccessibleInterval} of type {@link LongType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TInt64} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
 	private static TInt64 buildLong(SharedMemoryArray tensor)
 		throws IllegalArgumentException
 	{
@@ -186,17 +144,7 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TFloat32} tensor of type {@link TFloat32} from an
-	 * {@link RandomAccessibleInterval} of type {@link FloatType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TFloat32} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
-	public static TFloat32 buildFloat(SharedMemoryArray tensor)
+	private static TFloat32 buildFloat(SharedMemoryArray tensor)
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.getOriginalShape();
@@ -214,16 +162,6 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TFloat64} tensor of type {@link TFloat64} from an
-	 * {@link RandomAccessibleInterval} of type {@link DoubleType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TFloat64} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
 	private static TFloat64 buildDouble(SharedMemoryArray tensor)
 		throws IllegalArgumentException
 	{

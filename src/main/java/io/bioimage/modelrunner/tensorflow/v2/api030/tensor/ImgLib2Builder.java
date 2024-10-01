@@ -67,7 +67,8 @@ public final class ImgLib2Builder
 	 * @return The {@link RandomAccessibleInterval} built from the {@link TType} tensor.
 	 * @throws IllegalArgumentException If the {@link TType} tensor type is not supported.
 	 */
-    public static <T extends Type<T>> RandomAccessibleInterval<T> build(TType tensor) throws IllegalArgumentException
+    @SuppressWarnings("unchecked")
+	public static <T extends Type<T>> RandomAccessibleInterval<T> build(TType tensor) throws IllegalArgumentException
     {
     	if (tensor instanceof TUint8)
         {
@@ -95,13 +96,6 @@ public final class ImgLib2Builder
         }
     }
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a unsigned byte-typed {@link TUint8} tensor.
-	 * 
-	 * @param tensor 
-	 * 	The {@link TUint8} tensor data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link UnsignedByteType}.
-	 */
     private static RandomAccessibleInterval<UnsignedByteType> buildFromTensorUByte(TUint8 tensor)
     {
     	long[] arrayShape = tensor.shape().asArray();
@@ -118,13 +112,6 @@ public final class ImgLib2Builder
 		return Utils.transpose(rai);
     }
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a unsigned int32-typed {@link TInt32} tensor.
-	 * 
-	 * @param tensor 
-	 * 	The {@link TInt32} tensor data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link IntType}.
-	 */
     private static RandomAccessibleInterval<IntType> buildFromTensorInt(TInt32 tensor)
     {
     	long[] arrayShape = tensor.shape().asArray();
@@ -141,13 +128,6 @@ public final class ImgLib2Builder
 		return Utils.transpose(rai);
     }
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a unsigned float32-typed {@link TFloat32} tensor.
-	 * 
-	 * @param tensor 
-	 * 	The {@link TFloat32} tensor data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link FloatType}.
-	 */
     private static RandomAccessibleInterval<FloatType> buildFromTensorFloat(TFloat32 tensor)
     {
     	long[] arrayShape = tensor.shape().asArray();
@@ -164,13 +144,6 @@ public final class ImgLib2Builder
 		return Utils.transpose(rai);
     }
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a unsigned float64-typed {@link TFloat64} tensor.
-	 * 
-	 * @param tensor 
-	 * 	The {@link TFloat64} tensor data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link DoubleType}.
-	 */
     private static RandomAccessibleInterval<DoubleType> buildFromTensorDouble(TFloat64 tensor)
     {
     	long[] arrayShape = tensor.shape().asArray();
@@ -187,13 +160,6 @@ public final class ImgLib2Builder
 		return Utils.transpose(rai);
     }
 
-	/**
-	 * Builds a {@link RandomAccessibleInterval} from a unsigned int64-typed {@link TInt64} tensor.
-	 * 
-	 * @param tensor 
-	 * 	The {@link TInt64} tensor data is read from.
-	 * @return The {@link RandomAccessibleInterval} built from the tensor, of type {@link LongType}.
-	 */
     private static RandomAccessibleInterval<LongType> buildFromTensorLong(TInt64 tensor)
     {
     	long[] arrayShape = tensor.shape().asArray();

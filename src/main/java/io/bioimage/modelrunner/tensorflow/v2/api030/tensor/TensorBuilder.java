@@ -78,7 +78,7 @@ public final class TensorBuilder {
 	 * @throws IllegalArgumentException If the type of the {@link io.bioimage.modelrunner.tensor.Tensor}
 	 * is not supported
 	 */
-	public static TType build(io.bioimage.modelrunner.tensor.Tensor tensor)
+	public static <T extends RealType<T> & NativeType<T>> TType build(io.bioimage.modelrunner.tensor.Tensor<T> tensor)
 		throws IllegalArgumentException
 	{
 		return build(tensor.getData());
@@ -122,17 +122,7 @@ public final class TensorBuilder {
 		}
 	}
 
-	/**
-	 * Creates a {@link TType} tensor of type {@link TUint8} from an
-	 * {@link RandomAccessibleInterval} of type {@link UnsignedByteType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TType} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
-	public static TUint8 buildUByte(RandomAccessibleInterval<UnsignedByteType> tensor)
+	private static TUint8 buildUByte(RandomAccessibleInterval<UnsignedByteType> tensor)
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
@@ -159,17 +149,7 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TInt32} tensor of type {@link TInt32} from an
-	 * {@link RandomAccessibleInterval} of type {@link IntType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TInt32} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
-	public static TInt32 buildInt(RandomAccessibleInterval<IntType> tensor)
+	private static TInt32 buildInt(RandomAccessibleInterval<IntType> tensor)
 		throws IllegalArgumentException
 	{
 		long[] ogShape = tensor.dimensionsAsLongArray();
@@ -197,16 +177,6 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TInt64} tensor of type {@link TInt64} from an
-	 * {@link RandomAccessibleInterval} of type {@link LongType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TInt64} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
 	private static TInt64 buildLong(RandomAccessibleInterval<LongType> tensor)
 		throws IllegalArgumentException
 	{
@@ -235,17 +205,7 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TFloat32} tensor of type {@link TFloat32} from an
-	 * {@link RandomAccessibleInterval} of type {@link FloatType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TFloat32} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
-	public static TFloat32 buildFloat(
+	private static TFloat32 buildFloat(
 		RandomAccessibleInterval<FloatType> tensor)
 		throws IllegalArgumentException
 	{
@@ -273,16 +233,6 @@ public final class TensorBuilder {
 		return ndarray;
 	}
 
-	/**
-	 * Creates a {@link TFloat64} tensor of type {@link TFloat64} from an
-	 * {@link RandomAccessibleInterval} of type {@link DoubleType}
-	 * 
-	 * @param tensor 
-	 * 	The {@link RandomAccessibleInterval} to fill the tensor with.
-	 * @return The {@link TFloat64} tensor filled with the {@link RandomAccessibleInterval} data.
-	 * @throws IllegalArgumentException if the input {@link RandomAccessibleInterval} type is
-	 * not compatible
-	 */
 	private static TFloat64 buildDouble(
 		RandomAccessibleInterval<DoubleType> tensor)
 		throws IllegalArgumentException

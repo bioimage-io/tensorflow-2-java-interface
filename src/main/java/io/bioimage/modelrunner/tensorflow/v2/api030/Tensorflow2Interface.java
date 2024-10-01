@@ -720,11 +720,11 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
     	try {
         	pi.loadModel(modelFolder, modelSourc);
         	RandomAccessibleInterval<FloatType> rai = ArrayImgs.floats(new long[] {1, 512, 512, 1});
-        	Tensor<T> inp = (Tensor<T>) Tensor.build("aa", "byxc", rai);
-        	Tensor<R> out = (Tensor<R>) Tensor.buildBlankTensor("oo", "bcyx", new long[] {1, 512, 512, 33}, new FloatType());
+        	Tensor<FloatType> inp = Tensor.build("aa", "byxc", rai);
+        	Tensor<FloatType> out = Tensor.buildBlankTensor("oo", "bcyx", new long[] {1, 512, 512, 33}, new FloatType());
         	//Tensor<?> out = Tensor.buildEmptyTensor("oo", "byxc");
-        	List<Tensor<T>> ins = new ArrayList<Tensor<T>>();
-        	List<Tensor<R>> ous = new ArrayList<Tensor<R>>();
+        	List<Tensor<FloatType>> ins = new ArrayList<Tensor<FloatType>>();
+        	List<Tensor<FloatType>> ous = new ArrayList<Tensor<FloatType>>();
         	ins.add(inp);
         	ous.add(out);
         	pi.run(ins, ous);

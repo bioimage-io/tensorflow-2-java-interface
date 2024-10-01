@@ -176,7 +176,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 		try {
 			checkModelUnzipped();
 		} catch (Exception e) {
-			throw new LoadModelException(e.toString());
+			throw new LoadModelException(Types.stackTrace(e));
 		}
 		model = SavedModelBundle.load(this.modelFolder, "serve");
 		byte[] byteGraph = model.metaGraphDef().toByteArray();
@@ -185,7 +185,7 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 				"serving_default");
 		}
 		catch (InvalidProtocolBufferException e) {
-			System.out.println("Invalid graph");
+			throw new LoadModelException(Types.stackTrace(e));
 		}
 	}
 	

@@ -48,7 +48,7 @@ import org.tensorflow.types.TUint8;
 import org.tensorflow.types.family.TType;
 
 /**
- * Utility class to build Pytorch Bytedeco tensors from shm segments using {@link SharedMemoryArray}
+ * Utility class to build Tensorflow tensors from shm segments using {@link SharedMemoryArray}
  * 
  * @author Carlos Garcia Lopez de Haro
  */
@@ -65,7 +65,7 @@ public final class TensorBuilder {
 	 * @param array
 	 * 	the {@link SharedMemoryArray} that is going to be converted into
 	 *  a {@link TType} tensor
-	 * @return the Pytorch {@link TType} as the one stored in the shared memory segment
+	 * @return the Tensorflow {@link TType} as the one stored in the shared memory segment
 	 * @throws IllegalArgumentException if the type of the {@link SharedMemoryArray}
 	 *  is not supported
 	 */

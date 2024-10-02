@@ -26,10 +26,6 @@ import io.bioimage.modelrunner.utils.CommonUtils;
 import net.imglib2.util.Cast;
 
 import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.LongBuffer;
 import java.util.Arrays;
 
 import org.tensorflow.Tensor;
@@ -116,10 +112,7 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		IntBuffer intBuff = buff.asIntBuffer();
-		int[] intArray = new int[intBuff.capacity()];
-		intBuff.get(intArray);
-		IntDataBuffer dataBuffer = RawDataBufferFactory.create(intArray, false);
+		IntDataBuffer dataBuffer = RawDataBufferFactory.create(buff.asIntBuffer().array(), false);
 		TInt32 ndarray = TInt32.tensorOf(Shape.of(ogShape),
 			dataBuffer);
 		return ndarray;
@@ -135,10 +128,7 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		LongBuffer longBuff = buff.asLongBuffer();
-		long[] longArray = new long[longBuff.capacity()];
-		longBuff.get(longArray);
-		LongDataBuffer dataBuffer = RawDataBufferFactory.create(longArray, false);
+		LongDataBuffer dataBuffer = RawDataBufferFactory.create(buff.asLongBuffer().array(), false);
 		TInt64 ndarray = TInt64.tensorOf(Shape.of(ogShape),
 			dataBuffer);
 		return ndarray;
@@ -154,10 +144,7 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		FloatBuffer floatBuff = buff.asFloatBuffer();
-		float[] floatArray = new float[floatBuff.capacity()];
-		floatBuff.get(floatArray);
-		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(floatArray, false);
+		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(buff.asFloatBuffer().array(), false);
 		TFloat32 ndarray = TFloat32.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;
 	}
@@ -172,10 +159,7 @@ public final class TensorBuilder {
 		if (!tensor.isNumpyFormat())
 			throw new IllegalArgumentException("Shared memory arrays must be saved in numpy format.");
 		ByteBuffer buff = tensor.getDataBufferNoHeader();
-		DoubleBuffer doubleBuff = buff.asDoubleBuffer();
-		double[] doubleArray = new double[doubleBuff.capacity()];
-		doubleBuff.get(doubleArray);
-		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(doubleArray, false);
+		DoubleDataBuffer dataBuffer = RawDataBufferFactory.create(buff.asDoubleBuffer().array(), false);
 		TFloat64 ndarray = TFloat64.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;
 	}

@@ -100,13 +100,8 @@ public final class ShmBuilder
 			throw new IllegalArgumentException("Model output tensor with shape " + Arrays.toString(arrayShape) 
 					+ " is too big. Max number of elements per ubyte output tensor supported: " + Integer.MAX_VALUE / 1);
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new UnsignedByteType(), false, true);
-        ByteBuffer buff = shma.getDataBuffer();
-        int totalSize = 1;
-		for (long i : arrayShape) {totalSize *= i;}
-    	byte[] flatArr = new byte[buff.capacity()];
-    	buff.get(flatArr);
-        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
-        shma.setBuffer(ByteBuffer.wrap(flatArr));
+        ByteBuffer buff = shma.getDataBufferNoHeader();
+        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -118,13 +113,8 @@ public final class ShmBuilder
 					+ " is too big. Max number of elements per int output tensor supported: " + Integer.MAX_VALUE / 4);
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new IntType(), false, true);
-        ByteBuffer buff = shma.getDataBuffer();
-        int totalSize = 4;
-		for (long i : arrayShape) {totalSize *= i;}
-    	byte[] flatArr = new byte[buff.capacity()];
-    	buff.get(flatArr);
-        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
-        shma.setBuffer(ByteBuffer.wrap(flatArr));
+        ByteBuffer buff = shma.getDataBufferNoHeader();
+        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -136,13 +126,8 @@ public final class ShmBuilder
 					+ " is too big. Max number of elements per float output tensor supported: " + Integer.MAX_VALUE / 4);
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
-        ByteBuffer buff = shma.getDataBuffer();
-        int totalSize = 4;
-		for (long i : arrayShape) {totalSize *= i;}
-    	byte[] flatArr = new byte[buff.capacity()];
-    	buff.get(flatArr);
-        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
-        shma.setBuffer(ByteBuffer.wrap(flatArr));
+        ByteBuffer buff = shma.getDataBufferNoHeader();
+        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -154,13 +139,8 @@ public final class ShmBuilder
 					+ " is too big. Max number of elements per double output tensor supported: " + Integer.MAX_VALUE / 8);
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new DoubleType(), false, true);
-        ByteBuffer buff = shma.getDataBuffer();
-        int totalSize = 8;
-		for (long i : arrayShape) {totalSize *= i;}
-    	byte[] flatArr = new byte[buff.capacity()];
-    	buff.get(flatArr);
-        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
-        shma.setBuffer(ByteBuffer.wrap(flatArr));
+        ByteBuffer buff = shma.getDataBufferNoHeader();
+        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -173,13 +153,8 @@ public final class ShmBuilder
 		
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new LongType(), false, true);
-        ByteBuffer buff = shma.getDataBuffer();
-        int totalSize = 8;
-		for (long i : arrayShape) {totalSize *= i;}
-    	byte[] flatArr = new byte[buff.capacity()];
-    	buff.get(flatArr);
-        tensor.asRawTensor().data().read(flatArr, flatArr.length - totalSize, totalSize);
-        shma.setBuffer(ByteBuffer.wrap(flatArr));
+        ByteBuffer buff = shma.getDataBufferNoHeader();
+        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
         if (PlatformDetection.isWindows()) shma.close();
     }
 }

@@ -140,8 +140,8 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
-        long tt = System.currentTimeMillis();
         ByteDataBuffer tensorData = tensor.asRawTensor().data();
+        long tt = System.currentTimeMillis();
         for (int i = 0; i < buff.capacity(); i ++) {
         	buff.put(tensorData.getByte(i));
         }
@@ -150,7 +150,7 @@ public final class ShmBuilder
         tt = System.currentTimeMillis();
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
-        tensor.asRawTensor().data().read(flat, 0, buff.capacity());
+        tensorData.read(flat, 0, buff.capacity());
         buff = buff2;
         System.out.println("TIME 2: " + (System.currentTimeMillis() - tt));
         if (PlatformDetection.isWindows()) shma.close();

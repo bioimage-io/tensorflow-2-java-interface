@@ -348,8 +348,6 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	void runInterprocessing(List<Tensor<T>> inputTensors, List<Tensor<R>> outputTensors) throws RunModelException {
 		shmaInputList = new ArrayList<SharedMemoryArray>();
 		shmaOutputList = new ArrayList<SharedMemoryArray>();
-		//List<String> encIns = modifyForWinCmd(encodeInputs(inputTensors));
-		//List<String> encOuts = modifyForWinCmd(encodeOutputs(outputTensors));
 		List<String> encIns = encodeInputs(inputTensors);
 		List<String> encOuts = encodeOutputs(outputTensors);
 		LinkedHashMap<String, Object> args = new LinkedHashMap<String, Object>();
@@ -397,15 +395,6 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 			try { shm.close(); } catch (IOException e1) { e1.printStackTrace();}
 		});
 		shmaOutputList = null;
-	}
-	
-	private static List<String> modifyForWinCmd(List<String> ins){
-		if (!PlatformDetection.isWindows())
-			return ins;
-		List<String> newIns = new ArrayList<String>();
-		for (String ii : ins)
-			newIns.add("\"" + ii.replace("\"", "\\\"") + "\"");
-		return newIns;
 	}
 	
 	
@@ -668,38 +657,6 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	    if (path.lastIndexOf(".jar!") != -1)
 	    	path = path.substring(0, path.lastIndexOf(".jar!")) + ".jar";
 	    return path;
-	}
-	
-	/**
-	 * GEt the directory where the TF2 engine is located if a temporary dir is not found
-	 * @return directory of the engines
-	 */
-	private static String getEnginesDir() {
-		String dir;
-		try {
-			dir = getPathFromClass(Tensorflow2Interface.class);
-		} catch (UnsupportedEncodingException e) {
-			String classResource = Tensorflow2Interface.class.getName().replace('.', '/') + ".class";
-		    URL resourceUrl = Tensorflow2Interface.class.getClassLoader().getResource(classResource);
-		    if (resourceUrl == null) {
-		        return null;
-		    }
-		    String urlString = resourceUrl.toString();
-		    if (urlString.startsWith("jar:")) {
-		        urlString = urlString.substring(4);
-		    }
-		    if (urlString.startsWith("file:/") && PlatformDetection.isWindows()) {
-		        urlString = urlString.substring(6);
-		    } else if (urlString.startsWith("file:/") && !PlatformDetection.isWindows()) {
-		        urlString = urlString.substring(5);
-		    }
-		    File file = new File(urlString);
-		    String path = file.getAbsolutePath();
-		    if (path.lastIndexOf(".jar!") != -1)
-		    	path = path.substring(0, path.lastIndexOf(".jar!")) + ".jar";
-		    dir = path;
-		}
-		return new File(dir).getParent();
 	}
 	
 	

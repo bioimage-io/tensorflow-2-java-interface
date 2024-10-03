@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.tensorflow.ndarray.buffer.ByteDataBuffer;
 import org.tensorflow.types.TFloat32;
 import org.tensorflow.types.TFloat64;
 import org.tensorflow.types.TInt32;
@@ -102,19 +101,10 @@ public final class ShmBuilder
 					+ " is too big. Max number of elements per ubyte output tensor supported: " + Integer.MAX_VALUE / 1);
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new UnsignedByteType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
-        long tt = System.currentTimeMillis();
-        ByteDataBuffer tensorData = tensor.asRawTensor().data();
-        for (int i = 0; i < buff.capacity(); i ++) {
-        	buff.put(tensorData.getByte(i));
-        }
-        System.out.println("TIME 1: " + (System.currentTimeMillis() - tt) / 1000);
-        buff.rewind();
-        tt = System.currentTimeMillis();
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
-        shma.setBuffer(buff2);
-        System.out.println("TIME 2: " + (System.currentTimeMillis() - tt) / 1000);
+        buff = buff2;
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -127,7 +117,10 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new IntType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
-        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
+        byte[] flat = new byte[buff.capacity()];
+        ByteBuffer buff2 = ByteBuffer.wrap(flat);
+        tensor.asRawTensor().data().read(flat, 0, buff.capacity());
+        buff = buff2;
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -140,20 +133,10 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
-        ByteDataBuffer tensorData = tensor.asRawTensor().data();
-        long tt = System.currentTimeMillis();
-        /**
-        for (int i = 0; i < buff.capacity(); i ++) {
-        	buff.put(tensorData.getByte(i));
-        }*/
-        System.out.println("TIME 1: " + (System.currentTimeMillis() - tt));
-        buff.rewind();
-        tt = System.currentTimeMillis();
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
-        tensorData.read(flat, 0, buff.capacity());
+        tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff = buff2;
-        System.out.println("TIME 2: " + (System.currentTimeMillis() - tt));
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -166,7 +149,10 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new DoubleType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
-        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
+        byte[] flat = new byte[buff.capacity()];
+        ByteBuffer buff2 = ByteBuffer.wrap(flat);
+        tensor.asRawTensor().data().read(flat, 0, buff.capacity());
+        buff = buff2;
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -180,7 +166,10 @@ public final class ShmBuilder
 
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new LongType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
-        tensor.asRawTensor().data().read(buff.array(), 0, buff.capacity());
+        byte[] flat = new byte[buff.capacity()];
+        ByteBuffer buff2 = ByteBuffer.wrap(flat);
+        tensor.asRawTensor().data().read(flat, 0, buff.capacity());
+        buff = buff2;
         if (PlatformDetection.isWindows()) shma.close();
     }
 }

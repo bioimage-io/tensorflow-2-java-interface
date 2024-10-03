@@ -145,14 +145,14 @@ public final class ShmBuilder
         for (int i = 0; i < buff.capacity(); i ++) {
         	buff.put(tensorData.getByte(i));
         }
-        System.out.println("TIME 1: " + (System.currentTimeMillis() - tt) / 1000);
+        System.out.println("TIME 1: " + (System.currentTimeMillis() - tt));
         buff.rewind();
         tt = System.currentTimeMillis();
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
-        shma.setBuffer(buff2);
-        System.out.println("TIME 2: " + (System.currentTimeMillis() - tt) / 1000);
+        buff = buff2;
+        System.out.println("TIME 2: " + (System.currentTimeMillis() - tt));
         if (PlatformDetection.isWindows()) shma.close();
     }
 

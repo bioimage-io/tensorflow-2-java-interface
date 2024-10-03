@@ -142,9 +142,10 @@ public final class ShmBuilder
         ByteBuffer buff = shma.getDataBufferNoHeader();
         ByteDataBuffer tensorData = tensor.asRawTensor().data();
         long tt = System.currentTimeMillis();
+        /**
         for (int i = 0; i < buff.capacity(); i ++) {
         	buff.put(tensorData.getByte(i));
-        }
+        }*/
         System.out.println("TIME 1: " + (System.currentTimeMillis() - tt));
         buff.rewind();
         tt = System.currentTimeMillis();

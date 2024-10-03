@@ -331,6 +331,10 @@ public class Tensorflow2Interface implements DeepLearningEngineInterface {
 	 * MEthod only used in MacOS Intel and Windows systems that makes all the arrangements
 	 * to create another process, communicate the model info and tensors to the other 
 	 * process and then retrieve the results of the other process
+	 * @param <T>
+	 * 	ImgLib2 data type of the inputs
+	 * @param <R>
+	 * 	ImgLib2 data type of the outputs, both can be the same
 	 * @param inputTensors
 	 * 	tensors that are going to be run on the model
 	 * @param outputTensors

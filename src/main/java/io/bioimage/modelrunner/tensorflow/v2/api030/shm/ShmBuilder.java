@@ -138,11 +138,12 @@ public final class ShmBuilder
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
-
+        /*
 		float sum = 0;
 		for (float ff : buff2.asFloatBuffer().array())
 			sum += ff;
 		System.out.println("SECOND SUM: " + sum);
+		*/
         if (PlatformDetection.isWindows()) shma.close();
     }
 

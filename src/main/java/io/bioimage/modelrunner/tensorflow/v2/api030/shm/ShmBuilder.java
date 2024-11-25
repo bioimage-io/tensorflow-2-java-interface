@@ -103,7 +103,7 @@ public final class ShmBuilder
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new UnsignedByteType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
         byte[] flat = new byte[buff.capacity()];
-        ByteBuffer buff2 = ByteBuffer.wrap(flat);
+        ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();
@@ -119,7 +119,7 @@ public final class ShmBuilder
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new IntType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
         byte[] flat = new byte[buff.capacity()];
-        ByteBuffer buff2 = ByteBuffer.wrap(flat);
+        ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();
@@ -138,12 +138,6 @@ public final class ShmBuilder
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
-        /*
-		float sum = 0;
-		for (float ff : buff2.asFloatBuffer().array())
-			sum += ff;
-		System.out.println("SECOND SUM: " + sum);
-		*/
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -157,7 +151,7 @@ public final class ShmBuilder
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new DoubleType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
         byte[] flat = new byte[buff.capacity()];
-        ByteBuffer buff2 = ByteBuffer.wrap(flat);
+        ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();
@@ -174,7 +168,7 @@ public final class ShmBuilder
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new LongType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
         byte[] flat = new byte[buff.capacity()];
-        ByteBuffer buff2 = ByteBuffer.wrap(flat);
+        ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();

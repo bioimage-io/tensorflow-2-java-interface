@@ -156,10 +156,6 @@ public final class TensorBuilder {
 		float[] flat = new float[buff.capacity() / 4];
 		buff.asFloatBuffer().get(flat);
 		buff.rewind();
-		float sum = 0;
-		for (float ff : flat)
-			sum += ff;
-		System.out.println(sum);
 		FloatDataBuffer dataBuffer = RawDataBufferFactory.create(flat, false);
 		TFloat32 ndarray = TFloat32.tensorOf(Shape.of(ogShape), dataBuffer);
 		return ndarray;

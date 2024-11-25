@@ -26,6 +26,7 @@ import io.bioimage.modelrunner.utils.CommonUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import org.tensorflow.types.TFloat32;
@@ -104,7 +105,7 @@ public final class ShmBuilder
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
-        buff = buff2;
+        buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -120,7 +121,7 @@ public final class ShmBuilder
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
-        buff = buff2;
+        buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -134,9 +135,14 @@ public final class ShmBuilder
         SharedMemoryArray shma = SharedMemoryArray.readOrCreate(memoryName, arrayShape, new FloatType(), false, true);
         ByteBuffer buff = shma.getDataBufferNoHeader();
         byte[] flat = new byte[buff.capacity()];
-        ByteBuffer buff2 = ByteBuffer.wrap(flat);
-        tensor.asRawTensor().data().read(flat, 0, buff.capacity());
-        buff = buff2;
+        ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
+        tensor.asRawTensor().data().asFloats().read(buff2.asFloatBuffer().array(), 0, buff.capacity());
+        buff.put(buff2);
+
+		float sum = 0;
+		for (float ff : buff2.asFloatBuffer().array())
+			sum += ff;
+		System.out.println("SECOND SUM: " + sum);
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -152,7 +158,7 @@ public final class ShmBuilder
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
-        buff = buff2;
+        buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();
     }
 
@@ -169,7 +175,7 @@ public final class ShmBuilder
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
-        buff = buff2;
+        buff.put(buff2);
         if (PlatformDetection.isWindows()) shma.close();
     }
 }

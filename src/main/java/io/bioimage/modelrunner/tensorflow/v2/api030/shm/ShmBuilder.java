@@ -136,7 +136,7 @@ public final class ShmBuilder
         ByteBuffer buff = shma.getDataBufferNoHeader();
         byte[] flat = new byte[buff.capacity()];
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
-        tensor.asRawTensor().data().asFloats().read(buff2.asFloatBuffer().array(), 0, buff.capacity());
+        tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
 
 		float sum = 0;

@@ -68,25 +68,41 @@ public final class ShmBuilder
      */
     public static void build(TType tensor, String memoryName) throws IllegalArgumentException, IOException
     {
+    	build(tensor, memoryName, true);
+    }
+
+    /**
+     * Create a {@link SharedMemoryArray} from a {@link TType} tensor
+     * @param tensor
+     * 	the tensor to be passed into the other process through the shared memory
+     * @param memoryName
+     * 	the name of the memory region where the tensor is going to be copied
+     * @param close
+     * 	on Windows, whether to close the shma after creating it or reading it
+     * @throws IllegalArgumentException if the data type of the tensor is not supported
+     * @throws IOException if there is any error creating the shared memory array
+     */
+    public static void build(TType tensor, String memoryName, boolean close) throws IllegalArgumentException, IOException
+    {
     	if (tensor instanceof TUint8)
         {
-            buildFromTensorUByte((TUint8) tensor, memoryName);
+            buildFromTensorUByte((TUint8) tensor, memoryName, close);
         }
         else if (tensor instanceof TInt32)
         {
-            buildFromTensorInt((TInt32) tensor, memoryName);
+            buildFromTensorInt((TInt32) tensor, memoryName, close);
         }
         else if (tensor instanceof TFloat32)
         {
-            buildFromTensorFloat((TFloat32) tensor, memoryName);
+            buildFromTensorFloat((TFloat32) tensor, memoryName, close);
         }
         else if (tensor instanceof TFloat64)
         {
-            buildFromTensorDouble((TFloat64) tensor, memoryName);
+            buildFromTensorDouble((TFloat64) tensor, memoryName, close);
         }
         else if (tensor instanceof TInt64)
         {
-            buildFromTensorLong((TInt64) tensor, memoryName);
+            buildFromTensorLong((TInt64) tensor, memoryName, close);
         }
         else
         {
@@ -94,7 +110,7 @@ public final class ShmBuilder
         }
     }
 
-    private static void buildFromTensorUByte(TUint8 tensor, String memoryName) throws IOException
+    private static void buildFromTensorUByte(TUint8 tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 1))
@@ -106,10 +122,10 @@ public final class ShmBuilder
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorInt(TInt32 tensor, String memoryName) throws IOException
+    private static void buildFromTensorInt(TInt32 tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
@@ -122,10 +138,10 @@ public final class ShmBuilder
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorFloat(TFloat32 tensor, String memoryName) throws IOException
+    private static void buildFromTensorFloat(TFloat32 tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 4))
@@ -138,10 +154,10 @@ public final class ShmBuilder
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorDouble(TFloat64 tensor, String memoryName) throws IOException
+    private static void buildFromTensorDouble(TFloat64 tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
@@ -154,10 +170,10 @@ public final class ShmBuilder
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 
-    private static void buildFromTensorLong(TInt64 tensor, String memoryName) throws IOException
+    private static void buildFromTensorLong(TInt64 tensor, String memoryName, boolean close) throws IOException
     {
     	long[] arrayShape = tensor.shape().asArray();
 		if (CommonUtils.int32Overflows(arrayShape, 8))
@@ -171,6 +187,6 @@ public final class ShmBuilder
         ByteBuffer buff2 = ByteBuffer.wrap(flat).order(ByteOrder.LITTLE_ENDIAN);
         tensor.asRawTensor().data().read(flat, 0, buff.capacity());
         buff.put(buff2);
-        if (PlatformDetection.isWindows()) shma.close();
+        if (PlatformDetection.isWindows() && close) shma.close();
     }
 }
